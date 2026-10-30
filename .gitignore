@@ -1,0 +1,141 @@
+# ==========================================
+# Données sensibles & Configuration locale
+# ==========================================
+# Fichiers d'environnement
+.env
+.env.*
+!.env.example
+*.env
+
+# Profils de configuration locale Spring Boot (clés, mots de passe locaux)
+application-local.yml
+application-local.properties
+application-secret.yml
+application-secret.properties
+application-*-local.yml
+application-*-local.properties
+
+# Certificats, Clés privées, Keystores et JKS
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.der
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
+
+# Dossiers de secrets & tokens
+secrets/
+**/secrets/
+
+# Bases de données locales & fichiers de stockage / téléversements
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+uploads/
+**/uploads/
+storage/
+**/storage/
+media/
+**/media/
+data/
+**/data/
+
+# Journaux d'exécution & logs
+*.log
+logs/
+**/logs/
+*.out
+hs_err_pid*.log
+
+# ==========================================
+# Système d'exploitation (OS)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==========================================
+# IDEs & Éditeurs
+# ==========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.bak
+.project
+.classpath
+.settings/
+.factorypath
+.springBeans
+.sts4-cache/
+*.iml
+*.iws
+*.ipr
+
+# ==========================================
+# Frontend / Node / Angular
+# ==========================================
+node_modules/
+**/node_modules/
+.angular/
+**/.angular/
+dist/
+**/dist/
+tmp/
+**/tmp/
+out-tsc/
+coverage/
+.sass-cache/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# Backend / Java / Maven
+# ==========================================
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.rar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
+HELP.md
+
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+
+# ==========================================
+# Fichiers temporaires Office / Verrous
+# ==========================================
+~$*.docx
+~$*.xlsx
+~$*.pptx

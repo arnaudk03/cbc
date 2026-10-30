@@ -1,0 +1,167 @@
+classDiagram
+    direction TB
+
+    %% MODULE SECURITE & IAM
+    class Utilisateur {
+        +Long id
+        +String matricule
+        +String nom
+        +String prenom
+        +String email
+        +String telephone
+        +String motDePasseHash
+        +Boolean actif
+        +Boolean compteBloque
+        +Integer tentativesEchouees
+        +LocalDateTime dateDerniereConnexion
+    }
+
+    class Role {
+        +Long id
+        +String code
+        +String libelle
+        +String description
+    }
+
+    class Permission {
+        +Long id
+        +String code
+        +String libelle
+        +String module
+    }
+
+    class PerimetreIntervention {
+        +Long id
+        +String typePerimetre
+        +Long entiteId
+        +String libelleZone
+    }
+
+    class TwoFactorAuth {
+        +Long id
+        +Boolean active
+        +String secretKeyTotp
+        +String dernierCodeOtp
+        +LocalDateTime dateExpirationOtp
+        +String type2FA
+    }
+
+    class RefreshToken {
+        +Long id
+        +String tokenHash
+        +LocalDateTime dateExpiration
+        +Boolean revoque
+        +String adresseIpCreation
+    }
+
+    class TabletteDevice {
+        +Long id
+        +String numeroSerie
+        +String imei
+        +String modele
+        +String cleChiffrementLocale
+        +String statut
+        +LocalDateTime dateDerniereSynchro
+    }
+
+    class JournalAudit {
+        +Long id
+        +String action
+        +String entiteConcernee
+        +Long entiteId
+        +LocalDateTime dateAction
+        +String adresseIp
+        +String userAgent
+        +String resultat
+    }
+
+    %% MODULE NOTIFICATIONS & ALERTES MULTICANALES
+    class Notification {
+        +Long id
+        +CanalNotification canal
+        +TypeNotification typeNotification
+        +String destinataireContact
+        +String titre
+        +String message
+        +StatutNotification statut
+        +LocalDateTime dateCreation
+        +LocalDateTime dateEnvoi
+        +LocalDateTime dateLecture
+        +String referenceExterneGateway
+        +Integer tentativesEnvoi
+        +String erreurMessage
+    }
+
+    class CanalNotification {
+        <<enumeration>>
+        SMS
+        PUSH_MOBILE
+        EMAIL
+        IN_APP
+    }
+
+    class StatutNotification {
+        <<enumeration>>
+        EN_ATTENTE
+        ENVOYE
+        DISTRIBUE
+        ECHEC
+        LU
+    }
+
+    class TypeNotification {
+        <<enumeration>>
+        CONFIRMATION_BRBC
+        PAIEMENT_MOBILE_RECU
+        REJET_DOSSIER_COLLECTE
+        ALERTE_SEUIL_STOCK
+        ALERTE_ECART_TRANSFERT
+        CHALLENGE_OTP_2FA
+    }
+
+    %% MODULE DECOUPAGE ADMINISTRATIF (DGTD/DCSI - Decrets Juillet 2025)
+    class Locality {
+        +UUID id
+        +String code
+        +String name
+        +LocalityType type
+        +UUID parentId
+        +Double latitude
+        +Double longitude
+        +Status status
+        +Boolean isDeleted
+    }
+
+    class LocalityHierarchy {
+        +UUID ancestorId
+        +UUID descendantId
+        +Integer depth
+    }
+
+    class LocalityType {
+        <<enumeration>>
+        COUNTRY
+        REGION
+        PROVINCE
+        COMMUNE
+        ARRONDISSEMENT
+        SECTOR
+        VILLAGE
+    }
+
+    %% RELATIONS IAM
+    Utilisateur "1" *-- "0..1" TwoFactorAuth : possede
+    Utilisateur "*" -- "*" Role : possede_role
+    Role "*" -- "*" Permission : dispose_de
+    Utilisateur "1" *-- "*" PerimetreIntervention : restreint_par
+    Utilisateur "1" *-- "*" RefreshToken : sessions
+    Utilisateur "1" -- "0..1" TabletteDevice : utilise
+    Utilisateur "1" --> "*" JournalAudit : trace_par
+
+    %% RELATIONS DECOUPAGE ADMINISTRATIF
+    Locality "1" *-- "*" Locality : parent_de
+    Locality "1" <-- "*" LocalityHierarchy : descendant
+    Locality "0..1" <-- "*" PerimetreIntervention : restreint_a
+
+    %% RELATIONS NOTIFICATIONS
+    Utilisateur "0..1" <-- "*" Notification : destinee_a_utilisateur

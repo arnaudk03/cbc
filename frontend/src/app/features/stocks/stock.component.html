@@ -1,0 +1,744 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <span class="intro-eyebrow">BURKINA FASO · SONAGESS</span>
+      <h1>Stocks, FSJ &amp; Logistique BEBC</h1>
+      <p>
+        Suivi du stock disponible par comptoir, fiches journalières et enlèvements vers les
+        magasins centraux.
+      </p>
+    </div>
+    <div class="page-header-actions">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="comptoir-picker">
+        <mat-label>Comptoir</mat-label>
+        <mat-select
+          [value]="comptoirSelectionne()"
+          [disabled]="profilTerrain()"
+          (selectionChange)="changerComptoir($event.value)">
+          @for (comptoir of comptoirs(); track comptoir.id) {
+            <mat-option [value]="comptoir.id">
+              {{ comptoir.code }} — {{ comptoir.nom }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button (click)="charger()">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </header>
+
+  @if (erreur(); as message) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ message }}</span>
+    </div>
+  }
+
+  <mat-tab-group animationDuration="150ms">
+    <mat-tab label="Vue stocks">
+      <div class="tab-content">
+        <div class="stock-metrics">
+          <mat-card class="panel-card metric-card">
+            <mat-icon class="metric-icon icon-blue">inventory_2</mat-icon>
+            <div>
+              <span>Collecte validée</span>
+              <strong>{{ formaterTonnage(stock()?.tonnageCollecteValideKg) }}</strong>
+            </div>
+          </mat-card>
+          <mat-card class="panel-card metric-card">
+            <mat-icon class="metric-icon icon-amber">local_shipping</mat-icon>
+            <div>
+              <span>Tonnage enlevé</span>
+              <strong>{{ formaterTonnage(stock()?.tonnageEnleveKg) }}</strong>
+            </div>
+          </mat-card>
+          <mat-card class="panel-card metric-card">
+            <mat-icon class="metric-icon icon-green">warehouse</mat-icon>
+            <div>
+              <span>Stock disponible</span>
+              <strong>{{ formaterTonnage(stock()?.tonnageDisponibleKg) }}</strong>
+            </div>
+          </mat-card>
+        </div>
+
+        <mat-card class="panel-card">
+          <mat-card-content>
+            <div class="panel-title-row">
+              <h2>Dernières fiches de stock — {{ stock()?.comptoirNom ?? '—' }}</h2>
+              <span class="cell-sub">{{ fiches().length }} fiche(s)</span>
+            </div>
+            @if (fiches().length === 0) {
+              <div class="empty-state">
+                <mat-icon>assignment</mat-icon>
+                <strong>Aucune fiche journalière</strong>
+                <span>Créez une FSJ depuis l'onglet « Fiches FSJ ».</span>
+              </div>
+            } @else {
+              <div class="table-wrapper">
+                <table class="cbc-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Nature</th>
+                      <th class="align-right">Entrées</th>
+                      <th class="align-right">Sorties</th>
+                      <th class="align-right">Stock final</th>
+                      <th class="align-right">Valeur</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (fiche of fiches(); track fiche.id) {
+                      <tr>
+                        <td>{{ formaterDate(fiche.dateFiche) }}</td>
+                        <td>{{ fiche.natureOperation }}</td>
+                        <td class="align-right">
+                          {{ fiche.entreePoidsKg | number: '1.0-0' }} kg
+                          <span class="cell-sub">{{ fiche.entreeSacs }} sac(s)</span>
+                        </td>
+                        <td class="align-right">
+                          {{ fiche.sortiePoidsKg | number: '1.0-0' }} kg
+                          <span class="cell-sub">{{ fiche.sortieSacs }} sac(s)</span>
+                        </td>
+                        <td class="align-right">
+                          <strong>{{ fiche.stockFinalPoidsKg | number: '1.0-0' }} kg</strong>
+                        </td>
+                        <td class="align-right">{{ formaterMontant(fiche.stockFinalValeurCfa) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <ng-template #formulaireBebc>
+          <div class="dialog-header-custom">
+            <h2 mat-dialog-title>Créer un bordereau d'enlèvement BEBC</h2>
+            <p class="dialog-subtitle">
+              Le stock disponible du comptoir est contrôlé avant validation.
+            </p>
+          </div>
+          <mat-dialog-content class="bebc-create-content">
+            <form [formGroup]="transfertForm" (ngSubmit)="creerTransfert()">
+              @if (sansComptoir()) {
+                <div class="info-banner">
+                  <mat-icon>lock</mat-icon>
+                  <span>
+                    Aucun comptoir actif n’est affecté à votre compte. Contactez
+                    l’administrateur avant de créer un enlèvement.
+                  </span>
+                </div>
+              }
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Comptoir de départ</mat-label>
+                  <mat-select
+                    formControlName="comptoirId"
+                    (selectionChange)="changerComptoir($event.value)">
+                    @for (comptoir of comptoirs(); track comptoir.id) {
+                      <mat-option [value]="comptoir.id">{{ comptoir.code }} — {{ comptoir.nom }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Magasin de destination</mat-label>
+                  <mat-select formControlName="magasinDestinationId">
+                    @for (magasin of magasins(); track magasin.id) {
+                      <mat-option [value]="magasin.id">{{ magasin.nom }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Transporteur</mat-label>
+                  <input matInput formControlName="nomTransporteur" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Numéro du véhicule</mat-label>
+                  <input matInput formControlName="numeroVehicule" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Date d'arrivée prévue</mat-label>
+                  <input matInput type="date" formControlName="dateArriveePrevue" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Direction</mat-label>
+                  <input matInput formControlName="direction" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Localité</mat-label>
+                  <input matInput formControlName="localite" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Bénéficiaire</mat-label>
+                  <input matInput formControlName="beneficiaire" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Objet de l'enlèvement</mat-label>
+                  <input matInput formControlName="objetEnlevement" />
+                </mat-form-field>
+              </div>
+
+              <div class="form-section-title">
+                Détail de l’enlèvement — une ligne par spéculation
+              </div>
+              <div formArrayName="lignes" class="lignes-enlevement">
+                @for (ligne of lignesTransfert.controls; track $index; let i = $index) {
+                  <div
+                    class="ligne-enlevement-card"
+                    [formGroupName]="i"
+                    [class.ligne-alerte]="depassementLigne(i)">
+                    <div class="ligne-enlevement-header">
+                      <span class="ligne-num">Ligne {{ i + 1 }}</span>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        color="warn"
+                        matTooltip="Supprimer cette ligne"
+                        [disabled]="lignesTransfert.length <= 1"
+                        (click)="supprimerLigneTransfert(i)">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                    <div class="form-grid">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Spéculation</mat-label>
+                        <mat-select formControlName="speculationId">
+                          @for (speculation of speculationsDisponibles(); track speculation.speculationId) {
+                            <mat-option
+                              [value]="speculation.speculationId"
+                              [disabled]="speculationDejaChoisie(speculation.speculationId, i)">
+                              {{ speculation.speculationNom }} —
+                              {{ formaterKg(speculation.quantiteDisponibleKg) }} disponibles
+                            </mat-option>
+                          }
+                        </mat-select>
+                        @if (speculationsDisponibles().length === 0) {
+                          <mat-hint>Aucune spéculation avec du stock validé.</mat-hint>
+                        }
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Nombre de sacs</mat-label>
+                        <input matInput type="number" min="1" formControlName="nombreSacs" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Colisage (kg par sac)</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          formControlName="colisageKg" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Quantité prélevée</mat-label>
+                        <input matInput [value]="quantiteLigne(i)" readonly />
+                        <mat-hint>Disponible : {{ formaterKg(disponibleLigne(i)) }}</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    @if (depassementLigne(i)) {
+                      <p class="ligne-erreur">
+                        La quantité prélevée dépasse le stock disponible pour cette spéculation.
+                      </p>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="ligne-total">
+                <span>{{ lignesTransfert.length }} spéculation(s)</span>
+                <strong>{{ totalSacsTransfert() }} sac(s)</strong>
+                <strong>{{ formaterKg(totalTonnageTransfert()) }}</strong>
+              </div>
+              <div class="actions-lignes">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="ajouterLigneTransfert()"
+                  [disabled]="
+                    speculationsDisponibles().length === 0
+                    || lignesTransfert.length >= speculationsDisponibles().length
+                  ">
+                  <mat-icon>add</mat-icon>
+                  Ajouter une spéculation
+                </button>
+              </div>
+            </form>
+          </mat-dialog-content>
+          <mat-dialog-actions align="end">
+            <button mat-button type="button" (click)="fermerFormulaireBebc()">
+              Annuler
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="enregistrementTransfert() || sansComptoir()"
+              (click)="creerTransfert()">
+              <mat-icon>local_shipping</mat-icon>
+              Créer le BEBC
+            </button>
+          </mat-dialog-actions>
+        </ng-template>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Fiches FSJ">
+      <div class="tab-content">
+        @if (peutTenirFsj()) {
+          <mat-card class="panel-card">
+            <mat-card-header>
+              <mat-card-title>Nouvelle fiche de stock journalière</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <form [formGroup]="fsjForm" (ngSubmit)="enregistrerFsj()">
+                <div class="form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Comptoir</mat-label>
+                    <mat-select formControlName="comptoirId">
+                      @for (comptoir of comptoirs(); track comptoir.id) {
+                        <mat-option [value]="comptoir.id">{{ comptoir.code }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Date de la fiche</mat-label>
+                    <input matInput type="date" formControlName="dateFiche" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nature de l'opération</mat-label>
+                    <mat-select formControlName="natureOperation">
+                      @for (nature of natureOperations; track nature) {
+                        <mat-option [value]="nature">{{ nature }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-section-title">Entrées</div>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sacs entrants</mat-label>
+                    <input matInput type="number" min="0" formControlName="entreeSacs" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Poids entrant (kg)</mat-label>
+                    <input matInput type="number" min="0" formControlName="entreePoidsKg" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Valeur entrante (CFA)</mat-label>
+                    <input matInput type="number" min="0" formControlName="entreeValeurCfa" />
+                  </mat-form-field>
+
+                  <div class="form-section-title">Sorties</div>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sacs sortants</mat-label>
+                    <input matInput type="number" min="0" formControlName="sortieSacs" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Poids sortant (kg)</mat-label>
+                    <input matInput type="number" min="0" formControlName="sortiePoidsKg" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Valeur sortante (CFA)</mat-label>
+                    <input matInput type="number" min="0" formControlName="sortieValeurCfa" />
+                  </mat-form-field>
+                </div>
+                <div class="form-actions">
+                  <button mat-flat-button color="primary" type="submit" [disabled]="enregistrementFsj()">
+                    <mat-icon>save</mat-icon>
+                    Enregistrer la FSJ
+                  </button>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+        } @else {
+          <div class="info-banner">
+            <mat-icon>lock</mat-icon>
+            <span>Votre profil ne peut pas tenir de fiche de stock journalière.</span>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Enlèvements BEBC">
+      <div class="tab-content">
+        @if (transfertEnReception(); as transfert) {
+          <mat-card class="panel-card reception-card">
+            <mat-card-content>
+              <div class="panel-title-row">
+                <h2>Réception magasin — {{ transfert.numeroBebc }}</h2>
+                <span class="status-chip alerte">{{ transfert.tonnageEnleveKg }} kg enlevés</span>
+              </div>
+              <div class="reception-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Magasin de réception</mat-label>
+                  <mat-select
+                    [value]="receptionMagasin()"
+                    (selectionChange)="receptionMagasin.set($event.value)">
+                    @for (magasin of magasins(); track magasin.id) {
+                      <mat-option [value]="magasin.id">{{ magasin.nom }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Sacs reçus</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    min="0"
+                    [ngModel]="receptionSacs()"
+                    (ngModelChange)="receptionSacs.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Tonnage déchargé (kg)</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    min="0"
+                    [ngModel]="receptionTonnage()"
+                    (ngModelChange)="receptionTonnage.set($event)" />
+                </mat-form-field>
+                <button
+                  mat-flat-button
+                  color="primary"
+                  [disabled]="receptionEnCours()"
+                  (click)="confirmerReception()">
+                  Confirmer la réception
+                </button>
+                <button mat-button (click)="annulerReception()">Annuler</button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+
+        <mat-card class="panel-card">
+          <mat-card-content>
+            <div class="panel-title-row">
+              <div class="panel-title-main">
+                <h2>Bordereaux d'enlèvement</h2>
+                <span class="cell-sub">{{ transfertsDataSource.data.length }} BEBC</span>
+              </div>
+              @if (peutCreerTransfert()) {
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="ouvrirFormulaireBebc()">
+                  <mat-icon>add</mat-icon>
+                  Nouveau BEBC
+                </button>
+              }
+            </div>
+
+            <div class="table-wrapper">
+              <table
+                mat-table
+                [dataSource]="transfertsDataSource"
+                matSort
+                matSortActive="dateEnlevement"
+                matSortDirection="desc"
+                class="cbc-mat-table">
+                <!-- BEBC Column -->
+                <ng-container matColumnDef="dateEnlevement">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>BEBC</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="cell-title">{{ row.numeroBebc }}</span>
+                    <span class="cell-sub">{{ formaterDate(row.dateEnlevement) }}</span>
+                  </td>
+                </ng-container>
+
+                <!-- Comptoir Column -->
+                <ng-container matColumnDef="comptoirNom">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Comptoir</th>
+                  <td mat-cell *matCellDef="let row">{{ row.comptoirNom }}</td>
+                </ng-container>
+
+                <!-- Destination Column -->
+                <ng-container matColumnDef="magasinDestinationNom">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Destination</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="cell-main">{{ row.magasinDestinationNom ?? '—' }}</span>
+                    @if (row.lignes.length > 0) {
+                      <span class="cell-sub">{{ row.lignes.length }} spéculation(s)</span>
+                    }
+                  </td>
+                </ng-container>
+
+                <!-- Tonnage Column -->
+                <ng-container matColumnDef="tonnageEnleveKg">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header class="align-right">Poids</th>
+                  <td mat-cell *matCellDef="let row" class="align-right">
+                    <strong>{{ formaterTonnage(row.tonnageEnleveKg) }}</strong>
+                    <span class="cell-sub">{{ row.nombreSacs }} sac(s)</span>
+                  </td>
+                </ng-container>
+
+                <!-- Transport Column -->
+                <ng-container matColumnDef="nomTransporteur">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Transport</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="cell-main">{{ row.nomTransporteur }}</span>
+                    <span class="cell-sub">{{ row.numeroVehicule }}</span>
+                  </td>
+                </ng-container>
+
+                <!-- Reception Column -->
+                <ng-container matColumnDef="reception">
+                  <th mat-header-cell *matHeaderCellDef>Réception</th>
+                  <td mat-cell *matCellDef="let row">
+                    @if (row.reception; as reception) {
+                      <span class="cell-main">{{ reception.numeroReception }}</span>
+                      <span class="cell-sub">
+                        {{ reception.statutConformite }} · écart {{ reception.ecartPoidsKg }} kg
+                      </span>
+                    } @else {
+                      <span class="cell-sub italic">En attente</span>
+                    }
+                  </td>
+                </ng-container>
+
+                <!-- Statut Column -->
+                <ng-container matColumnDef="statut">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="status-chip" [ngClass]="couleurStatut(row.statut)">
+                      {{ libelleStatut(row.statut) }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let row">
+                    <div class="table-actions">
+                      <button
+                        mat-stroked-button
+                        color="primary"
+                        class="action-btn-sm"
+                        matTooltip="Détail du BEBC"
+                        aria-label="Voir le détail du BEBC"
+                        (click)="voirDetails(row)">
+                        <mat-icon>visibility</mat-icon>
+                        Détail
+                      </button>
+                      <button
+                        mat-stroked-button
+                        color="accent"
+                        class="action-btn-sm"
+                        matTooltip="Aperçu BEBC / imprimer"
+                        aria-label="Aperçu du BEBC pour impression"
+                        (click)="imprimerBebc(row)">
+                        <mat-icon>print</mat-icon>
+                        Aperçu
+                      </button>
+                      @if (row.statut === 'EN_TRANSIT' && peutReceptionner()) {
+                        <button
+                          mat-flat-button
+                          color="primary"
+                          class="action-btn-sm"
+                          (click)="ouvrirReception(row)">
+                          Réceptionner
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colonnesTransfert"></tr>
+                <tr mat-row *matRowDef="let row; columns: colonnesTransfert"></tr>
+
+                <!-- Row shown when there is no matching data. -->
+                <tr class="mat-row" *matNoDataRow>
+                  <td class="mat-cell" colspan="8">
+                    <div class="empty-state">
+                      <mat-icon>local_shipping</mat-icon>
+                      <strong>Aucun bordereau trouvé</strong>
+                      <span>Les transferts apparaîtront ici.</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <mat-paginator
+                [pageSizeOptions]="[5, 10, 25, 100]"
+                [pageSize]="10"
+                showFirstLastButtons
+                aria-label="Sélectionner la page">
+              </mat-paginator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <ng-template #formulaireBebc>
+          <div class="dialog-header-custom">
+            <h2 mat-dialog-title>Créer un bordereau d'enlèvement BEBC</h2>
+            <p class="dialog-subtitle">
+              Le stock disponible du comptoir est contrôlé avant validation.
+            </p>
+          </div>
+          <mat-dialog-content class="bebc-create-content">
+            <form [formGroup]="transfertForm" (ngSubmit)="creerTransfert()">
+              @if (sansComptoir()) {
+                <div class="info-banner">
+                  <mat-icon>lock</mat-icon>
+                  <span>
+                    Aucun comptoir actif n’est affecté à votre compte. Contactez
+                    l’administrateur avant de créer un enlèvement.
+                  </span>
+                </div>
+              }
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Comptoir de départ</mat-label>
+                  <mat-select
+                    formControlName="comptoirId"
+                    (selectionChange)="changerComptoir($event.value)">
+                    @for (comptoir of comptoirs(); track comptoir.id) {
+                      <mat-option [value]="comptoir.id">{{ comptoir.code }} — {{ comptoir.nom }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Magasin de destination</mat-label>
+                  <mat-select formControlName="magasinDestinationId">
+                    @for (magasin of magasins(); track magasin.id) {
+                      <mat-option [value]="magasin.id">{{ magasin.nom }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Transporteur</mat-label>
+                  <input matInput formControlName="nomTransporteur" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Numéro du véhicule</mat-label>
+                  <input matInput formControlName="numeroVehicule" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Date d'arrivée prévue</mat-label>
+                  <input matInput type="date" formControlName="dateArriveePrevue" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Direction</mat-label>
+                  <input matInput formControlName="direction" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Localité</mat-label>
+                  <input matInput formControlName="localite" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Bénéficiaire</mat-label>
+                  <input matInput formControlName="beneficiaire" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Objet de l'enlèvement</mat-label>
+                  <input matInput formControlName="objetEnlevement" />
+                </mat-form-field>
+              </div>
+
+              <div class="form-section-title">
+                Détail de l’enlèvement — une ligne par spéculation
+              </div>
+              <div formArrayName="lignes" class="lignes-enlevement">
+                @for (ligne of lignesTransfert.controls; track $index; let i = $index) {
+                  <div
+                    class="ligne-enlevement-card"
+                    [formGroupName]="i"
+                    [class.ligne-alerte]="depassementLigne(i)">
+                    <div class="ligne-enlevement-header">
+                      <span class="ligne-num">Ligne {{ i + 1 }}</span>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        color="warn"
+                        matTooltip="Supprimer cette ligne"
+                        [disabled]="lignesTransfert.length <= 1"
+                        (click)="supprimerLigneTransfert(i)">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                    <div class="form-grid">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Spéculation</mat-label>
+                        <mat-select formControlName="speculationId">
+                          @for (speculation of speculationsDisponibles(); track speculation.speculationId) {
+                            <mat-option
+                              [value]="speculation.speculationId"
+                              [disabled]="speculationDejaChoisie(speculation.speculationId, i)">
+                              {{ speculation.speculationNom }} —
+                              {{ formaterKg(speculation.quantiteDisponibleKg) }} disponibles
+                            </mat-option>
+                          }
+                        </mat-select>
+                        @if (speculationsDisponibles().length === 0) {
+                          <mat-hint>Aucune spéculation avec du stock validé.</mat-hint>
+                        }
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Nombre de sacs</mat-label>
+                        <input matInput type="number" min="1" formControlName="nombreSacs" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Colisage (kg par sac)</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          formControlName="colisageKg" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Quantité prélevée</mat-label>
+                        <input matInput [value]="quantiteLigne(i)" readonly />
+                        <mat-hint>Disponible : {{ formaterKg(disponibleLigne(i)) }}</mat-hint>
+                      </mat-form-field>
+                    </div>
+                    @if (depassementLigne(i)) {
+                      <p class="ligne-erreur">
+                        La quantité prélevée dépasse le stock disponible pour cette spéculation.
+                      </p>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="ligne-total">
+                <span>{{ lignesTransfert.length }} spéculation(s)</span>
+                <strong>{{ totalSacsTransfert() }} sac(s)</strong>
+                <strong>{{ formaterKg(totalTonnageTransfert()) }}</strong>
+              </div>
+              <div class="actions-lignes">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="ajouterLigneTransfert()"
+                  [disabled]="
+                    speculationsDisponibles().length === 0
+                    || lignesTransfert.length >= speculationsDisponibles().length
+                  ">
+                  <mat-icon>add</mat-icon>
+                  Ajouter une spéculation
+                </button>
+              </div>
+            </form>
+          </mat-dialog-content>
+          <mat-dialog-actions align="end">
+            <button mat-button type="button" (click)="fermerFormulaireBebc()">
+              Annuler
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="enregistrementTransfert() || sansComptoir()"
+              (click)="creerTransfert()">
+              <mat-icon>local_shipping</mat-icon>
+              Créer le BEBC
+            </button>
+          </mat-dialog-actions>
+        </ng-template>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

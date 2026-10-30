@@ -1,0 +1,62 @@
+sequenceDiagram
+    autonumber
+    actor U as Utilisateur (Web / Mobile)
+    participant Front as Client (Angular / Android)
+    participant Sec as Spring Security (FilterChain)
+    participant Auth as AuthService & AuthManager
+    participant Pwd as BCrypt PasswordEncoder
+    participant MFA as TwoFactorAuthService (OTP)
+    participant JWT as JwtTokenProvider
+    participant DB as Base de Données (PostgreSQL)
+    participant Audit as JournalAuditService (ANSSI)
+
+    U->>Front: Saisit identifiant (Matricule) & Mot de passe
+    Front->>Sec: POST /api/v1/auth/login {matricule, password}
+    Sec->>Auth: authenticate(UsernamePasswordAuthenticationToken)
+    Auth->>DB: findByMatricule(matricule)
+    alt Utilisateur inexistant ou inactif
+        Auth->>Audit: logEchecConnexion("UTILISATEUR_INCONNU", IP)
+        Auth-->>Sec: BadCredentialsException
+        Sec-->>Front: 401 Unauthorized ("Identifiants invalides")
+        Front-->>U: Affiche message d'erreur
+    else Compte verrouillé (> 3 tentatives infructueuses)
+        Auth->>Audit: logTentativeCompteBloque(matricule, IP)
+        Auth-->>Sec: LockedException
+        Sec-->>Front: 423 Locked ("Compte temporairement bloqué. Contactez l'administrateur.")
+        Front-->>U: Affiche alerte sécurité
+    else Compte valide & actif
+        Auth->>Pwd: matches(passwordRaw, passwordHash)
+        alt Mot de passe incorrect
+            Auth->>DB: incrementerTentativesEchouees()
+            Auth->>Audit: logEchecConnexion("MOT_DE_PASSE_INCORRECT", IP)
+            Auth-->>Sec: BadCredentialsException
+            Sec-->>Front: 401 Unauthorized ("Identifiants invalides")
+        else Mot de passe correct
+            Auth->>DB: reinitialiserTentativesEchouees()
+            
+            alt Rôle sensible requérant 2FA (Chef SFB / DCT / Direction / Admin)
+                Auth->>MFA: genererOtpEtNotifier(user)
+                MFA->>U: Envoi SMS OTP / Notification Push sécurisée
+                Auth-->>Front: 202 Accepted {status: "REQUIRE_2FA", tempSessionToken}
+                Front-->>U: Affiche formulaire de saisie du code OTP
+                
+                U->>Front: Saisie du code OTP (ex: 6 chiffres)
+                Front->>Sec: POST /api/v1/auth/verify-2fa {tempSessionToken, otpCode}
+                Sec->>MFA: validerOtp(tempSessionToken, otpCode)
+                alt OTP invalide ou expiré
+                    MFA->>Audit: logEchec2FA(user, IP)
+                    MFA-->>Front: 400 Bad Request ("Code OTP invalide ou expiré")
+                    Front-->>U: Erreur OTP
+                else OTP validé avec succès
+                    MFA->>JWT: genererPaireTokens(user)
+                end
+            else Rôle standard sans 2FA (Agent collecteur, Magasinier)
+                Auth->>JWT: genererPaireTokens(user)
+            end
+
+            JWT->>DB: sauvegarderRefreshToken(user, refreshTokenHash)
+            JWT-->>Front: 200 OK {accessToken (JWT court terme), refreshToken, roles, perimetres}
+            Auth->>Audit: logConnexionReussie(user, IP, UserAgent)
+            Front-->>U: Connexion réussie & Redirection selon périmètre / rôle
+        end
+    end

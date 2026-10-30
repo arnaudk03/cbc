@@ -1,0 +1,924 @@
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.checkbox-line {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding-bottom: 1rem;
+}
+
+.detail-row td {
+  background: #f8fafc;
+  padding: 1rem 1.25rem;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 0.9rem;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+/* --------------------------------------------------------------------------
+   Bordereau BRBC Haute Fidélité (Document Officiel SONAGESS)
+   -------------------------------------------------------------------------- */
+.brbc-sheet-container {
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1.5rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(
+      90deg,
+      #c8102e 0px,
+      #c8102e 24px,
+      #f59e0b 24px,
+      #f59e0b 32px,
+      #007a3d 32px,
+      #007a3d 56px,
+      #0f172a 56px,
+      #0f172a 64px,
+      #f59e0b 64px,
+      #f59e0b 72px
+    );
+  }
+}
+
+.brbc-sheet-header {
+  padding: 0.85rem 1.25rem 0.7rem;
+  background: #fbfcfd;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.brbc-sheet-title {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed #e2e8f0;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  span {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.74rem;
+    color: #64748b;
+  }
+}
+
+.brbc-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.brbc-republique {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 34rem;
+
+  small {
+    font-size: 0.65rem;
+    line-height: 1.35;
+    color: #64748b;
+
+    & + small {
+      margin-top: 1px;
+    }
+  }
+}
+
+.brbc-logo-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+
+  .form-logo {
+    display: block;
+    height: 52px;
+    width: auto;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+.brbc-certif-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  .brbc-pays {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    margin-bottom: 2px;
+
+    strong {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #c8102e; /* Rouge Faso */
+    }
+
+    span {
+      font-size: 0.68rem;
+      font-style: italic;
+      font-weight: 700;
+      color: #d97706; /* Or céréalier */
+    }
+  }
+
+  .brbc-certif-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+  }
+
+  small {
+    font-size: 0.68rem;
+    color: #15803d;
+    font-weight: 600;
+  }
+}
+
+.brbc-sheet-body {
+  padding: 1rem 1.25rem 1.4rem;
+}
+
+/* Formulaire BRBC compact */
+.brbc-sheet-body .form-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem 0.6rem;
+}
+
+.brbc-sheet-body mat-form-field {
+  --mat-form-field-container-height: 46px;
+  --mat-form-field-container-vertical-padding: 11px;
+  font-size: 0.82rem;
+}
+
+.brbc-sheet-body .form-section-title {
+  margin: 0.15rem 0 0;
+  padding-top: 0.3rem;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 1200px) {
+  .brbc-sheet-body .form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .brbc-sheet-body .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .brbc-sheet-body .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Cadran de Bascule Électronique en Direct
+   -------------------------------------------------------------------------- */
+.scale-terminal-box {
+  margin-bottom: 0.9rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+  padding: 0.65rem 0.9rem;
+  color: #0f172a;
+}
+
+.scale-terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b4d2c;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.scale-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  animation: scale-pulse 2s infinite;
+}
+
+@keyframes scale-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.scale-terminal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.scale-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+
+  &.scale-main-metric {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+
+  &.scale-money-metric {
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+}
+
+.scale-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.scale-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #94a3b8;
+  }
+
+  &.text-amber {
+    color: #b45309;
+  }
+}
+
+.scale-val-main {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #15803d;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #166534;
+  }
+}
+
+.scale-val-money {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #b45309;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #92400e;
+  }
+}
+
+.scale-sub {
+  font-size: 0.64rem;
+  color: #94a3b8;
+}
+
+.scale-quality-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0.7rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.76rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #16a34a;
+  }
+
+  &.banner-danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+
+    mat-icon {
+      color: #dc2626;
+    }
+  }
+}
+
+/* Boutons BRBC */
+.brbc-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+
+  .total-recap {
+    font-size: 0.82rem;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+
+    strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+  }
+
+  .btn-submit {
+    height: 44px;
+    padding: 0 20px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    background-color: #0b4d2c !important;
+    border-radius: 8px;
+
+    mat-icon {
+      margin-right: 6px;
+    }
+  }
+
+  .btn-cancel {
+    height: 44px;
+    font-weight: 600;
+    color: #64748b;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Lignes de Pesée Multi-Spéculations (BRBC)
+   -------------------------------------------------------------------------- */
+.lignes-pesee-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.ligne-pesee-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem 0.55rem;
+  background: #fafbfc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &.ligne-alerte {
+    border-color: #fca5a5;
+    background: #fef2f2;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.ligne-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin-bottom: 0.35rem;
+
+  .ligne-num {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #0b4d2c;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #f0fdf4;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #bbf7d0;
+  }
+}
+
+.ligne-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+}
+
+.ligne-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3rem 0.6rem;
+
+  mat-form-field {
+    width: 100%;
+    font-size: 0.82rem;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.ligne-resultats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+
+  .lr-item {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+
+    .lr-label {
+      font-size: 0.64rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .lr-val {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #0f172a;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lr-net {
+      color: #15803d;
+    }
+
+    .lr-montant {
+      color: #b45309;
+    }
+  }
+
+  .lr-alerte {
+    margin-left: auto;
+    color: #dc2626;
+    font-size: 0.72rem;
+    font-weight: 700;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #dc2626;
+    }
+  }
+}
+
+.add-ligne-btn {
+  align-self: center;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 2px dashed #94a3b8;
+  border-radius: 8px;
+  color: #0b4d2c;
+  background: transparent;
+
+  &:hover {
+    border-color: #0b4d2c;
+    background: #f0fdf4;
+  }
+
+  mat-icon {
+    margin-right: 6px;
+  }
+}
+
+@media (max-width: 900px) {
+  .ligne-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .ligne-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.full-width-title {
+  font-size: 0.8rem;
+  margin-top: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Jumeau Numérique BRBC — Overlay Modal & Document Officiel */
+.brbc-document-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 2rem 1rem;
+}
+
+.brbc-modal-container {
+  width: 100%;
+  max-width: 860px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  margin: auto;
+}
+
+.brbc-modal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.5rem;
+  background: #0f172a;
+  color: #ffffff;
+  border-bottom: 2px solid #b91c1c;
+
+  .toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f8fafc;
+
+    mat-icon {
+      color: #d97706;
+    }
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .btn-print {
+      background-color: #0b4d2c !important;
+      color: #ffffff !important;
+      font-weight: 600;
+    }
+
+    .btn-close {
+      color: #94a3b8;
+      &:hover { color: #ffffff; }
+    }
+  }
+}
+
+.brbc-paper-sheet {
+  position: relative;
+  background: #ffffff;
+  padding: 2.5rem;
+  color: #1e293b;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.4;
+
+  .brbc-faso-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #c8102e 0%, #c8102e 33%, #f59e0b 33%, #f59e0b 66%, #007a3d 66%, #007a3d 100%);
+  }
+
+  .brbc-header {
+    display: grid;
+    grid-template-columns: 1.9fr 0.8fr 2fr;
+    gap: 1rem;
+    align-items: center;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px double #cbd5e1;
+
+    .header-left {
+      .ministere { font-size: 0.65rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+      .societe { font-size: 1.1rem; font-weight: 900; color: #0b4d2c; letter-spacing: 0.04em; margin-top: 4px; }
+      .societe-sub { font-size: 0.65rem; color: #64748b; }
+    }
+
+    .header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+
+      .official-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+
+        img {
+          display: block;
+          height: 58px;
+          width: auto;
+        }
+      }
+      .doc-code { margin-top: 6px; font-size: 0.68rem; font-weight: 700; color: #b91c1c; background: #fef2f2; padding: 2px 8px; border-radius: 4px; border: 1px dashed #fca5a5; }
+    }
+
+    .header-right {
+      text-align: right;
+
+      .pays-block {
+        margin-bottom: 8px;
+
+        .republique { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0f172a; }
+        .devise { font-size: 0.68rem; font-style: italic; color: #b91c1c; }
+      }
+
+      .brbc-badge { display: inline-block; font-size: 0.65rem; font-weight: 800; color: #ffffff; background: #0b4d2c; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 6px; }
+      .souche-num { font-size: 0.88rem; color: #0f172a; strong { font-family: monospace; color: #b91c1c; font-size: 0.95rem; } }
+      .doc-date { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+    }
+  }
+
+  .brbc-title-box {
+    text-align: center;
+    margin: 1.5rem 0 1.25rem;
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #0b4d2c;
+      letter-spacing: 0.05em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    p {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin: 4px 0 0;
+      font-weight: 500;
+    }
+  }
+
+  .brbc-grid-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+
+    .info-block {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+
+      .block-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #0b4d2c;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+
+        mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        padding: 3px 0;
+
+        span { color: #64748b; }
+        strong { color: #0f172a; font-weight: 700; }
+      }
+    }
+  }
+
+  .brbc-table-container {
+    margin-bottom: 1.25rem;
+
+    .brbc-official-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        border: 1px solid #cbd5e1;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+      }
+
+      th {
+        background: #f1f5f9;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+      }
+
+      .highlight-net { background: #f0fdf4; color: #166534; font-size: 0.9rem; }
+      .highlight-price { background: #fffbeb; color: #92400e; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+
+      .brbc-total-row {
+        background: #f8fafc;
+        border-top: 2px solid #0f172a;
+
+        td {
+          font-weight: 800;
+          color: #0f172a;
+          border-top: 2px solid #0f172a;
+        }
+      }
+    }
+  }
+
+  .brbc-quality-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    font-size: 0.75rem;
+
+    .q-item {
+      span { color: #64748b; }
+      strong { color: #0f172a; margin-left: 4px; }
+    }
+
+    .badge-conforme {
+      color: #15803d;
+      background: #dcfce7;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+
+    .badge-non-conforme {
+      color: #b91c1c;
+      background: #fef2f2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+  }
+
+  .brbc-words-box {
+    background: #fffbeb;
+    border: 1px dashed #fcd34d;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+
+    .label { font-size: 0.7rem; font-weight: 700; color: #92400e; text-transform: uppercase; }
+    .words-value { font-size: 0.92rem; font-weight: 800; color: #78350f; font-style: italic; margin-top: 2px; }
+  }
+
+  .brbc-signatures-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-top: 2rem;
+
+    .sig-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+
+      .sig-title { font-size: 0.72rem; font-weight: 800; color: #0f172a; text-transform: uppercase; }
+      .sig-sub { font-size: 0.65rem; color: #64748b; margin-top: 2px; }
+
+      .sig-space {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+
+        .stamp-mark { font-size: 0.65rem; font-weight: 800; color: #0b4d2c; border: 1px dashed #0b4d2c; padding: 4px 8px; transform: rotate(-5deg); }
+        .thumbprint-box {
+          display: flex; flex-direction: column; align-items: center; color: #94a3b8;
+          mat-icon { font-size: 32px; width: 32px; height: 32px; }
+          span { font-size: 0.6rem; }
+        }
+        .sonagess-stamp {
+          display: flex; flex-direction: column; align-items: center; border: 2px double #b91c1c; padding: 4px 10px; border-radius: 50%; color: #b91c1c; transform: rotate(8deg);
+          .s-top { font-size: 0.55rem; font-weight: 900; }
+          .s-mid { font-size: 0.6rem; font-weight: 800; border-top: 1px solid #b91c1c; border-bottom: 1px solid #b91c1c; margin: 2px 0; }
+          .s-bot { font-size: 0.5rem; font-weight: 700; }
+        }
+      }
+    }
+  }
+
+  .brbc-footer-legal {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+
+    .hash-code { font-family: monospace; font-size: 0.65rem; color: #64748b; letter-spacing: 0.05em; }
+    .legal-text { font-size: 0.62rem; color: #94a3b8; margin-top: 2px; }
+  }
+}
+
+/* Print Optimization */
+@media print {
+  .no-print, nav, header, footer, .app-header, .command-bar, mat-card:not(.brbc-paper-sheet) {
+    display: none !important;
+  }
+
+  .brbc-document-overlay {
+    position: static;
+    background: #ffffff;
+    padding: 0;
+  }
+
+  .brbc-modal-container {
+    max-width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .brbc-paper-sheet {
+    padding: 1cm;
+  }
+}

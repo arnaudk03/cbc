@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor SFB_Init as Agent Initiateur SFB
+    actor SFB_Chef as Chef SFB (Validateur)
+    participant Front as Web Angular
+    participant API as Backend Spring Boot
+    participant Gate as Opérateur Mobile Money
+    actor P as Producteur
+
+    SFB_Init->>Front: Consulte le bordereau transmis
+    SFB_Init->>Front: Clique sur "Initier Paiement"
+    Front->>API: POST /api/v1/paiements/initier
+    API-->>Front: Ordre créé (Statut: INITIE)
+
+    SFB_Chef->>Front: Ouvre les paiements à valider
+    SFB_Chef->>Front: Saisit son code 2FA / OTP
+    Front->>API: POST /api/v1/paiements/{id}/valider-2fa
+    rect rgb(245, 248, 255)
+        Note over API,Gate: Exécution financière sécurisée (SoD & 2FA)
+        API->>API: Contrôle: Initiateur != Validateur & OTP valide
+        API->>Gate: Ordre de transfert (Téléphone, Montant)
+        Gate-->>API: Callback validation transfert
+    end
+    API->>API: Statut collecte -> PAYEE
+    Gate-->>P: SMS de réception des fonds

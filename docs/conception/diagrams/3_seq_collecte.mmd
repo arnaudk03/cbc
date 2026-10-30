@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor P as Producteur
+    actor A as Agent Collecteur
+    participant M as App Mobile (Offline)
+    participant API as API Spring Boot
+    participant DB as PostgreSQL
+
+    P->>A: Présente le lot de céréales et CNIB
+    A->>M: Sélectionne Producteur & Spéculation
+    A->>M: Saisie paramètres qualité (Humidité, Impuretés)
+    M->>M: Vérification vs Barèmes réglementaires
+    alt Conforme
+        A->>M: Saisie des pesées (Sacs, Brut, Tare)
+        M->>M: Calcul Poids Net & Montant Net
+        P->>M: Signature électronique
+        M->>M: Stockage local chiffré SQLite
+        opt Réseau disponible
+            M->>API: POST /api/v1/collectes/sync
+            API->>DB: Contrôle intégrité & Insertion
+            API-->>M: Confirmation 201 + Numéro BRBC
+        end
+    else Non conforme
+        M-->>A: Alerte rejet qualité
+        A-->>P: Notification du rejet
+    end

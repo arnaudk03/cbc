@@ -1,0 +1,222 @@
+@if (afficherCoquille()) {
+<!-- Liseré de Souveraineté & Tissage Faso Dan Fani -->
+<div class="faso-dan-fani-ribbon" role="presentation" aria-hidden="true"></div>
+
+<header class="app-header-container">
+  <mat-toolbar class="main-toolbar">
+    <a class="toolbar-brand" routerLink="/dashboard" aria-label="Accueil SONAGESS CBC">
+      <span class="brand-logo-surface">
+        <img src="assets/sonagess-logo.jpg" alt="Logo SONAGESS" />
+      </span>
+      <span class="brand-text">
+        <span class="brand-eyebrow">BURKINA FASO</span>
+        <span class="brand-title">SO.NA.GE.S.S.</span>
+        <span class="brand-subtitle">Collecte Bord Champ</span>
+      </span>
+    </a>
+
+    <nav class="toolbar-nav">
+      @for (menu of menusVisibles(); track menu.route) {
+      <a mat-button [routerLink]="menu.route" routerLinkActive="active-nav">
+        <mat-icon>{{ menu.icon }}</mat-icon> <span>{{ menu.label }}</span>
+      </a>
+      }
+    </nav>
+
+    <span class="spacer"></span>
+
+    <div class="toolbar-actions">
+      <!-- Palette de commande rapide (Ctrl+K) -->
+      <button type="button" class="quick-cmd-btn" (click)="togglePalette()"
+        matTooltip="Commande rapide &amp; recherche universelle (Ctrl+K)">
+        <mat-icon>search</mat-icon>
+        <span class="quick-cmd-label">Rechercher…</span>
+        <kbd class="quick-cmd-kbd">Ctrl+K</kbd>
+      </button>
+
+      <button mat-icon-button class="mobile-nav-trigger" matTooltip="Navigation" [matMenuTriggerFor]="menuMobile">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <mat-menu #menuMobile="matMenu">
+        @for (menu of menusVisibles(); track menu.route) {
+        <button mat-menu-item [routerLink]="menu.route">
+          <mat-icon>{{ menu.icon }}</mat-icon>
+          <span>{{ menu.label }}</span>
+        </button>
+        }
+        <button mat-menu-item routerLink="/notifications">
+          <mat-icon>notifications</mat-icon>
+          <span>Notifications</span>
+        </button>
+      </mat-menu>
+
+      <button mat-icon-button class="notif-btn" routerLink="/notifications" [matBadge]="notificationsNonLues()"
+        [matBadgeHidden]="notificationsNonLues() === 0" matBadgeColor="warn"
+        matTooltip="Notifications &amp; alertes sécurité">
+        <mat-icon>notifications</mat-icon>
+      </button>
+
+      <!-- Indicateur de résilience terrain -->
+      <div class="sync-indicator" matTooltip="Synchronisation active avec le serveur central">
+        <span class="sync-dot"></span>
+        <span class="sync-label">LIAISON CENTRALE</span>
+      </div>
+
+      @if (auth.user(); as utilisateur) {
+      <button class="user-pill" mat-button [matMenuTriggerFor]="menuCompte">
+        <!-- <div class="user-avatar">{{ auth.initiales() }}</div> -->
+        <mat-icon class="user-avatar">account_circle</mat-icon>
+        <span class="user-role">{{ auth.roleLabel() }}</span>
+        <!-- <div class="user-info">
+          <span class="user-name">{{ utilisateur.prenom }} {{ utilisateur.nom }}</span>
+          <span class="user-role">{{ auth.roleLabel() }}</span>
+        </div> -->
+        <mat-icon class="user-chevron">expand_more</mat-icon>
+      </button>
+
+      <mat-menu #menuCompte="matMenu" class="compte-menu">
+        <div class="compte-menu-entete">
+          <strong>{{ utilisateur.prenom }} {{ utilisateur.nom }}</strong>
+          <span>{{ utilisateur.matricule }} · {{ utilisateur.email }}</span>
+          <small class="compte-certif">🔐 Authentification 2FA ANSSI</small>
+        </div>
+        <button mat-menu-item routerLink="/referentiels">
+          <mat-icon>tune</mat-icon>
+          <span>Paramétrage du compte</span>
+        </button>
+        <button mat-menu-item (click)="seDeconnecter()">
+          <mat-icon>logout</mat-icon>
+          <span>Se déconnecter</span>
+        </button>
+      </mat-menu>
+      }
+    </div>
+  </mat-toolbar>
+
+  <!-- Ticker Opérationnel : Bourse Céréalière & Postes de Commandement -->
+  <aside class="operational-ticker" aria-label="Bourse des cotations officielles céréalières et suivi de campagne">
+    <div class="ticker-badge-campagne">
+      <span class="pulse-dot"></span>
+      <span class="ticker-campagne-code">{{ campagneCode() }}</span>
+      <span class="ticker-campagne-statut">{{ campagneStatut() }}</span>
+    </div>
+
+    <div class="ticker-track">
+      @for (cotation of cotations(); track cotation.code) {
+      <div class="ticker-item">
+        <span class="cotation-nom">{{ cotation.nom }}</span>
+        <span class="cotation-prix">{{ cotation.prixKg }} <small>FCFA/kg</small></span>
+        <span class="cotation-hum" title="Seuil humidité toléré">≤{{ cotation.seuilHumidite }}% hum.</span>
+      </div>
+      }
+
+      <div class="ticker-divider" aria-hidden="true"></div>
+
+      <div class="ticker-item stat-item">
+        <span class="cotation-nom">Avancement National</span>
+        <span class="cotation-prix">{{ tonnageCollecte() | number:'1.0-0' }} T <small>/ {{ tonnageObjectif() |
+            number:'1.0-0' }} T</small></span>
+        <div class="ticker-gauge" title="Taux de réalisation">
+          <div class="ticker-gauge-fill" [style.width.%]="tauxRealisation()"></div>
+        </div>
+        <span class="ticker-pct">{{ tauxRealisation() }}%</span>
+      </div>
+
+      <div class="ticker-divider" aria-hidden="true"></div>
+
+      <div class="ticker-item stat-item">
+        <span class="cotation-nom">Dispositif Terrain</span>
+        <span class="cotation-prix">{{ comptoirsActifs() }} <small>comptoirs</small></span>
+        <span class="ticker-sub">2FA Orange/Moov OK</span>
+      </div>
+    </div>
+
+    <div class="ticker-actions">
+      <a mat-button class="ticker-quick-action" routerLink="/collectes" matTooltip="Raccourci clavier : touche N">
+        <mat-icon>add_circle_outline</mat-icon>
+        <span>Nouvelle Pesée (N)</span>
+      </a>
+    </div>
+  </aside>
+</header>
+}
+
+<main class="app-main-content" [class.connexion-layout]="!afficherCoquille()">
+  <router-outlet></router-outlet>
+</main>
+
+<!-- Palette de commande universelle (Ctrl+K) -->
+@if (paletteOuverte()) {
+<div class="palette-overlay" (click)="fermerPalette()">
+  <div class="palette-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+    aria-label="Palette de commande rapide">
+    <div class="palette-input-wrapper">
+      <mat-icon class="palette-search-icon">search</mat-icon>
+      <input type="text" class="palette-input"
+        placeholder="Rechercher une opération, un BRBC, un producteur, un comptoir…" [(ngModel)]="recherchePalette"
+        autofocus />
+      <kbd class="palette-close-kbd" (click)="fermerPalette()" title="Fermer (Échap)">ÉCHAP</kbd>
+    </div>
+
+    <div class="palette-body">
+      <div class="palette-section-title">Actions et Navigation Rapide</div>
+      <div class="palette-list">
+        @for (action of actionsFiltrees(); track action.label) {
+        <button type="button" class="palette-item" (click)="naviguerDepuisPalette(action.route)">
+          <div class="palette-item-icon">
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </div>
+          <div class="palette-item-content">
+            <div class="palette-item-title-row">
+              <span class="palette-item-title">{{ action.label }}</span>
+              @if (action.badge) {
+              <span class="palette-item-badge">{{ action.badge }}</span>
+              }
+            </div>
+            <span class="palette-item-desc">{{ action.description }}</span>
+          </div>
+          <mat-icon class="palette-arrow">arrow_forward</mat-icon>
+        </button>
+        } @empty {
+        <div class="palette-empty">
+          <mat-icon>search_off</mat-icon>
+          <span>Aucune action trouvée pour « {{ recherchePalette() }} »</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="palette-footer">
+      <span class="palette-footer-hint"><strong>Navigation :</strong> Cliquez ou utilisez <kbd>Tab</kbd> pour
+        naviguer</span>
+      <span class="palette-footer-hint"><strong>Raccourci Pesée :</strong> Touche <kbd>N</kbd></span>
+    </div>
+  </div>
+</div>
+}
+
+@if (afficherCoquille()) {
+<footer class="app-footer">
+  <div class="footer-faso-strip" role="presentation"></div>
+  <div class="footer-content">
+    <div class="footer-left">
+      <strong>BURKINA FASO</strong>
+      <span class="footer-devise">La Patrie ou la Mort, nous vaincrons</span>
+      <small class="footer-sovereign">Ministère de l'Agriculture, de l'Eau et des Ressources Animales et
+        Halieutiques</small>
+    </div>
+    <div class="footer-center">
+      <strong>Société Nationale de Gestion du Stock de Sécurité Alimentaire (SONAGESS)</strong>
+      <span>Plateforme Nationale Intégrée de Collecte Bord Champ (CBC)</span>
+    </div>
+    <div class="footer-right">
+      <div class="footer-badge-sec">
+        <mat-icon>shield</mat-icon>
+        <span>Portail Métier Sécurisé</span>
+      </div>
+      <small>Intégrité SHA-256 · Chiffrement AES-256</small>
+    </div>
+  </div>
+</footer>
+}

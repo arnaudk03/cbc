@@ -1,0 +1,141 @@
+classDiagram
+    direction TB
+
+    %% PARAMETRAGE & CAMPAGNE
+    class Campagne {
+        +Long id
+        +String code
+        +String libelle
+        +LocalDate dateDebut
+        +LocalDate dateFin
+        +Double objectifTotalTonnes
+    }
+
+    class ObjectifCampagne {
+        +Long id
+        +Double objectifTonnes
+        +Double budgetPrevisionnelCFA
+        +Double seuilAlertePct
+    }
+
+    class Speculation {
+        +Long id
+        +String code
+        +String nom
+        +Double seuilHumiditeMax
+        +Double seuilImpureteMax
+        +Boolean active
+    }
+
+    class PrixGarantie {
+        +Long id
+        +Double prixUnitaireKg
+        +LocalDate dateEffet
+    }
+
+    class Comptoir {
+        +Long id
+        +String code
+        +String nom
+        +String type
+        +Double latitudeGps
+        +Double longitudeGps
+        +Double capaciteStockageKg
+    }
+
+    class Locality {
+        +UUID id
+        +String code
+        +String name
+        +LocalityType type
+    }
+
+    %% PRODUCTEUR
+    class Producteur {
+        +Long id
+        +String nomPrenom
+        +String telephoneMobileMoney
+        +String operateurMobile
+        +String cnibNumero
+        +LocalDate cnibDateDelivrance
+        +String cnibLieuDelivrance
+        +String adressePrecision
+    }
+
+    %% COLLECTE BORD CHAMP
+    class CollecteBordChamp {
+        +Long id
+        +String referenceLot
+        +LocalDateTime dateHeureCollecte
+        +String statut
+        +Double latitudeGps
+        +Double longitudeGps
+    }
+
+    class ControleQualite {
+        +Long id
+        +Double tauxHumidite
+        +Double tauxImpuretes
+        +Double grainsAvaries
+        +Boolean conforme
+        +String decisionAgent
+    }
+
+    class FichePesee_FP {
+        +Long id
+        +String numeroFiche
+        +String directionRegionale
+        +String directionProvinciale
+        +String siteComptoir
+        +Integer nombreSacs
+        +Double poidsBrutTotalKg
+        +Double tareEmballageKg
+        +Double poidsNetTotalKg
+    }
+
+    class BordereauReception_BRBC {
+        +Long id
+        +String numeroBRBC
+        +LocalDateTime dateEmission
+        +Double quantiteKg
+        +Double prixUnitaireApplique
+        +Double montantNetPayerCFA
+        +String montantEnLettres
+        +String modePaiement
+        +String observationsReceptionnaire
+        +String signatureProducteurToken
+        +String signatureAgentToken
+        +String statutValidation
+    }
+
+    class OrdrePaiement {
+        +Long id
+        +String referenceTransaction
+        +Double montantPayeCFA
+        +String operateur
+        +String telephoneDestination
+        +LocalDateTime dateInitiation
+        +LocalDateTime dateValidation2FA
+        +String statut
+    }
+
+    %% RELATIONS PARAMETRAGE
+    Campagne "1" *-- "*" ObjectifCampagne : fixe
+    Speculation "1" <-- "*" ObjectifCampagne : concerne
+    Locality "0..1" <-- "*" ObjectifCampagne : alloue_a_region
+    Campagne "1" *-- "*" PrixGarantie : definit
+    Speculation "1" *-- "*" PrixGarantie : concerne
+    Locality "1" <-- "*" Comptoir : situe_dans
+    Locality "1" <-- "*" Producteur : reside_dans
+    Locality "0..1" <-- "*" PrixGarantie : applique_a
+
+    %% RELATIONS COLLECTE
+    Campagne "1" -- "*" CollecteBordChamp : planifie
+    Comptoir "1" *-- "*" CollecteBordChamp : realisee_a
+    Producteur "1" -- "*" CollecteBordChamp : vend
+    Speculation "1" -- "*" CollecteBordChamp : concerne
+
+    CollecteBordChamp "1" *-- "1" ControleQualite : certifiee_par
+    CollecteBordChamp "1" *-- "1" FichePesee_FP : quantifiee_par
+    CollecteBordChamp "1" *-- "1" BordereauReception_BRBC : materialisee_par
+    BordereauReception_BRBC "1" *-- "0..1" OrdrePaiement : regle_par

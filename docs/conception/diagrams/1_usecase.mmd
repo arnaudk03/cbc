@@ -1,0 +1,104 @@
+flowchart LR
+    %% ACTEURS TERRAIN (Bonshommes UML)
+    AgentCollecteur["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Agent Collecteur</b>"]
+    
+    ChefComptoir["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Chef de Comptoir</b>"]
+    
+    Magasinier["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Magasinier Récepteur</b>"]
+
+    %% ACTEURS SIEGE / DIRECTIONS (Bonshommes UML)
+    ChefSCP["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Chef Service Collecte (SCP)</b>"]
+    
+    DCT["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Dir. Collecte &amp; Transformation (DCT)</b>"]
+    
+    SFB_Initiateur["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Agent Initiateur SFB</b>"]
+    
+    SFB_Chef["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%23d97706' stroke-width='2' fill='%23fef3c7'/><line x1='14' y1='14' x2='14' y2='30' stroke='%23d97706' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%23d97706' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%23d97706' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%23d97706' stroke-width='2'/></svg><br/><b>Chef SFB (Validateur 2FA)</b>"]
+    
+    Comptable["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Service Comptabilité</b>"]
+    
+    SGS["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%230284c7' stroke-width='2' fill='%23e0f2fe'/><line x1='14' y1='14' x2='14' y2='30' stroke='%230284c7' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%230284c7' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%230284c7' stroke-width='2'/></svg><br/><b>Service Gestion Stocks (SGS)</b>"]
+    
+    Admin["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%23ef4444' stroke-width='2' fill='%23fee2e2'/><line x1='14' y1='14' x2='14' y2='30' stroke='%23ef4444' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%23ef4444' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%23ef4444' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%23ef4444' stroke-width='2'/></svg><br/><b>Administrateur Système</b>"]
+
+    %% ACTEURS EXTERNES (Bonshommes UML)
+    Producteur["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%2316a34a' stroke-width='2' fill='%23dcfce7'/><line x1='14' y1='14' x2='14' y2='30' stroke='%2316a34a' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%2316a34a' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%2316a34a' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%2316a34a' stroke-width='2'/></svg><br/><b>Producteur</b>"]
+    PasserelleNotif["<svg width='28' height='46' viewBox='0 0 28 46' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='8' r='6' stroke='%239333ea' stroke-width='2' fill='%23f3e8ff'/><line x1='14' y1='14' x2='14' y2='30' stroke='%239333ea' stroke-width='2'/><line x1='3' y1='20' x2='25' y2='20' stroke='%239333ea' stroke-width='2'/><line x1='14' y1='30' x2='5' y2='44' stroke='%239333ea' stroke-width='2'/><line x1='14' y1='30' x2='23' y2='44' stroke='%239333ea' stroke-width='2'/></svg><br/><b>Passerelle Notifications<br/>(SMS / Push / SMTP)</b>"]
+
+    subgraph Systeme["Plateforme Collecte Bord Champ (SONAGESS)"]
+        %% Module Parametrage
+        UC01([UC01: Gérer campagnes & objectifs])
+        UC02([UC02: Gérer prix garantis, seuils & barèmes])
+        UC03([UC03: Gérer paramétrage & comptes])
+        UC04([UC04: Affecter tablettes & ouvrir comptoir])
+
+        %% Module Collecte
+        UC06([UC06: Enregistrer collecte bord champ])
+        UC05([UC05: Tenir fiche journalière stocks & emballages])
+        UC07([UC07: Examiner SCP & Valider DCT les BRBC])
+
+        %% Module Paiement
+        UC08([UC08: Établir états récapitulatifs paiement])
+        UC09([UC09: Contrôler & Trier pièces DFC])
+        UC10([UC10: Initier & Valider ordre paiement Mobile Money 2FA])
+        UC11([UC11: Payer en espèces & décaisser])
+        UC12([UC12: Rapprochement bancaire & relevés])
+        UC15([UC15: Générer écritures SYSCOHADA & exporter])
+
+        %% Module Transfert & Magasins
+        UC16([UC16: Programmer transferts & transport])
+        UC17([UC17: Établir bordereau d'enlèvement comptoir])
+        UC18([UC18: Réceptionner en magasin & constater écarts])
+
+        %% Module Notifications & Alertes
+        UC21([UC21: Notifier par SMS confirmation BRBC & paiement])
+        UC22([UC22: Pousser alertes rejet lot, seuil stock & transfert])
+        UC23([UC23: Consulter centre notifications & relancer])
+
+        %% Module Reporting
+        UC20([UC20: Consulter tableaux de bord temps réel])
+    end
+
+    %% Relations Paramétrage
+    Admin --> UC03
+    DCT --> UC01
+    DCT --> UC02
+    ChefComptoir --> UC04
+
+    %% Relations Collecte
+    AgentCollecteur --> UC06
+    ChefComptoir --> UC05
+    ChefSCP --> UC07
+    DCT --> UC07
+
+    %% Relations Paiement
+    DCT --> UC08
+    SFB_Initiateur --> UC09
+    SFB_Initiateur --> UC10
+    SFB_Chef --> UC10
+    Comptable --> UC12
+    Comptable --> UC15
+
+    %% Relations Transfert
+    DCT --> UC16
+    SGS --> UC16
+    AgentCollecteur --> UC17
+    Magasinier --> UC18
+    SGS --> UC18
+
+    %% Relations Notifications & Alertes
+    PasserelleNotif --> UC21
+    PasserelleNotif --> UC22
+    UC21 --> Producteur
+    UC22 --> AgentCollecteur
+    DCT --> UC23
+    Admin --> UC23
+
+    %% Relations Reporting
+    DCT --> UC20
+    SGS --> UC20
+    Admin --> UC20
+
+    %% Classes de style pour masquer les boîtes autour des bonshommes
+    classDef actorStyle fill:transparent,stroke:none;
+    class AgentCollecteur,ChefComptoir,Magasinier,ChefSCP,DCT,SFB_Initiateur,SFB_Chef,Comptable,SGS,Admin,Producteur,PasserelleNotif actorStyle;

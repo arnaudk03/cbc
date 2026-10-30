@@ -1,0 +1,156 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+<mat-dialog-content>
+  @if (data.subtitle) {
+    <p class="dialog-subtitle">{{ data.subtitle }}</p>
+  }
+  @if (erreur) {
+    <div class="dialog-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ erreur }}</span>
+    </div>
+  }
+  <div class="form-grid">
+    @for (field of data.fields; track field.key) {
+      @if (field.type === 'boolean') {
+        <div class="field-wide boolean-field">
+          <mat-checkbox [(ngModel)]="valeurs[field.key]" [name]="field.key">
+            {{ field.label }}
+          </mat-checkbox>
+          @if (field.hint) {
+            <span class="field-hint">{{ field.hint }}</span>
+          }
+        </div>
+      } @else if (field.type === 'select') {
+        <mat-form-field appearance="outline" [class.field-wide]="field.multiple">
+          <mat-label>{{ field.label }}</mat-label>
+          <mat-select
+            [(ngModel)]="valeurs[field.key]"
+            [name]="field.key"
+            [multiple]="field.multiple === true"
+            [placeholder]="field.placeholder ?? ''">
+            @for (option of field.options ?? []; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+          @if (field.hint) {
+            <mat-hint>{{ field.hint }}</mat-hint>
+          }
+        </mat-form-field>
+      } @else if (field.type === 'locality') {
+        <div class="locality-field field-wide">
+          <div class="locality-caption">
+            <span>{{ field.label }}</span>
+            @if (field.hint) {
+              <span class="field-hint">{{ field.hint }}</span>
+            }
+          </div>
+          <div class="locality-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Région</mat-label>
+              <mat-select
+                [(ngModel)]="chainesLocalite[field.key].regionId"
+                [name]="field.key + '-region'"
+                (ngModelChange)="changerNiveauLocalite(field.key, 'region')">
+                @if (!field.required) {
+                  <mat-option value="">{{ field.emptyLabel ?? 'Aucune / National' }}</mat-option>
+                }
+                @for (region of regions; track region.id) {
+                  <mat-option [value]="region.id">{{ region.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Province</mat-label>
+              <mat-select
+                [(ngModel)]="chainesLocalite[field.key].provinceId"
+                [name]="field.key + '-province'"
+                [disabled]="!chainesLocalite[field.key].regionId"
+                (ngModelChange)="changerNiveauLocalite(field.key, 'province')">
+                @for (province of optionsProvinces(field.key); track province.id) {
+                  <mat-option [value]="province.id">{{ province.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Commune</mat-label>
+              <mat-select
+                [(ngModel)]="chainesLocalite[field.key].communeId"
+                [name]="field.key + '-commune'"
+                [disabled]="!chainesLocalite[field.key].provinceId"
+                (ngModelChange)="changerNiveauLocalite(field.key, 'commune')">
+                @for (commune of optionsCommunes(field.key); track commune.id) {
+                  <mat-option [value]="commune.id">{{ commune.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Secteur / Arrondissement</mat-label>
+              <mat-select
+                [(ngModel)]="chainesLocalite[field.key].secteurId"
+                [name]="field.key + '-secteur'"
+                [disabled]="
+                  !chainesLocalite[field.key].communeId ||
+                  optionsSecteurs(field.key).length === 0
+                "
+                (ngModelChange)="changerNiveauLocalite(field.key, 'secteur')">
+                <mat-option value="">Toute la commune</mat-option>
+                @for (secteur of optionsSecteurs(field.key); track secteur.id) {
+                  <mat-option [value]="secteur.id">{{ secteur.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (optionsVillages(field.key).length > 0) {
+              <mat-form-field appearance="outline">
+                <mat-label>Village</mat-label>
+                <mat-select
+                  [(ngModel)]="chainesLocalite[field.key].villageId"
+                  [name]="field.key + '-village'"
+                  (ngModelChange)="changerNiveauLocalite(field.key, 'village')">
+                  <mat-option value="">Tout le secteur</mat-option>
+                  @for (village of optionsVillages(field.key); track village.id) {
+                    <mat-option [value]="village.id">{{ village.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+          </div>
+        </div>
+      } @else if (field.type === 'textarea') {
+        <mat-form-field appearance="outline" class="field-wide">
+          <mat-label>{{ field.label }}</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="valeurs[field.key]"
+            [name]="field.key"
+            [placeholder]="field.placeholder ?? ''"
+            rows="3"></textarea>
+          @if (field.hint) {
+            <mat-hint>{{ field.hint }}</mat-hint>
+          }
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline">
+          <mat-label>{{ field.label }}</mat-label>
+          <input
+            matInput
+            [type]="field.type"
+            [(ngModel)]="valeurs[field.key]"
+            [name]="field.key"
+            [placeholder]="field.placeholder ?? ''"
+            [attr.min]="field.min ?? null"
+            [attr.max]="field.max ?? null"
+            [attr.step]="field.step ?? null" />
+          @if (field.hint) {
+            <mat-hint>{{ field.hint }}</mat-hint>
+          }
+        </mat-form-field>
+      }
+    }
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="annuler()">Annuler</button>
+  <button mat-flat-button color="primary" type="button" (click)="valider()">
+    {{ data.submitLabel ?? 'Enregistrer' }}
+  </button>
+</mat-dialog-actions>

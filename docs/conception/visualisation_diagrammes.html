@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagrammes UML - Collecte Bord Champ SONAGESS</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      max-width: 1300px;
+      margin: 0 auto 2rem auto;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    .badge-status {
+      display: inline-block;
+      margin-top: 0.75rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 0.25rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      max-width: 1300px;
+      margin: 0 auto 2rem auto;
+    }
+
+    .tab-btn {
+      background-color: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background-color: #334155;
+      border-color: #38bdf8;
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary);
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .diagram-card {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .diagram-card.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    .card-header-left h2 {
+      font-size: 1.45rem;
+      color: #f1f5f9;
+      margin-bottom: 0.35rem;
+    }
+
+    .card-header-left p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background-color: #334155;
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: #475569;
+      color: #ffffff;
+      border-color: #94a3b8;
+    }
+
+    .viewer-wrapper {
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow: auto;
+      text-align: center;
+      min-height: 550px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid #cbd5e1;
+    }
+
+    .diagram-img {
+      max-width: 100%;
+      height: auto;
+      transition: transform 0.2s ease;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .zoom-controls {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .zoom-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .zoom-btn:hover {
+      color: var(--text);
+      border-color: #38bdf8;
+    }
+
+    .subnav-container {
+      margin-bottom: 1.25rem;
+      padding: 0.75rem 1rem;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .subnav-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .subnav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .subtab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .subtab-btn:hover {
+      border-color: #38bdf8;
+      color: var(--text);
+    }
+
+    .subtab-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Plateforme Collecte Bord Champ (SONAGESS)</h1>
+    <p class="subtitle">Dossier Conceptuel UML </p>
+    <!-- <div class="badge-status">✓ 8 Diagrammes vectoriels compilés et prêts</div> -->
+  </header>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('tab-usecase', this)">1. Cas d'Utilisation Global</button>
+    <button class="tab-btn" onclick="showTab('tab-usecase-auth', this)">2. Cas d'Utilisation Auth & 2FA</button>
+    <button class="tab-btn" onclick="showTab('tab-seq-auth', this)">3. Séquence : Authentification & 2FA</button>
+    <button class="tab-btn" onclick="showTab('tab-classes', this)">4. Modèle de Données (Classes JPA)</button>
+    <button class="tab-btn" onclick="showTab('tab-seq1', this)">5. Séquence : Collecte Terrain</button>
+    <button class="tab-btn" onclick="showTab('tab-seq2', this)">6. Séquence : Examen & Validation</button>
+    <button class="tab-btn" onclick="showTab('tab-seq3', this)">7. Séquence : Paiement Mobile</button>
+    <button class="tab-btn" onclick="showTab('tab-seq4', this)">8. Séquence : Transfert Magasins</button>
+  </div>
+
+  <div class="container">
+
+    <!-- TAB 1: Cas d'utilisation Global -->
+    <div id="tab-usecase" class="diagram-card active">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>1. Diagramme Global des Cas d'Utilisation </h2>
+          <p>Acteurs terrain (Agents, Chefs de comptoir), Directions centrales (DCT, DFC, DGSA), Producteurs,
+            Passerelles de Notification et Administration.</p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/1_usecase.svg" target="_blank" download="1_usecase.svg">📥 Télécharger
+            SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-usecase" class="diagram-img" src="diagrams/1_usecase.svg" alt="Diagramme des Cas d'Utilisation">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-usecase', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-usecase', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-usecase')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 2: Cas d'utilisation Authentification -->
+    <div id="tab-usecase-auth" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>2. Diagramme de Cas d'Utilisation : Authentification & Sécurité</h2>
+          <p>Gestion des accès, second facteur 2FA/OTP (rôles sensibles), verrouillage après 3 échecs, appairage
+            tablette .</p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/usecase_auth.svg" target="_blank" download="usecase_auth.svg">📥
+            Télécharger SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-usecase-auth" class="diagram-img" src="diagrams/usecase_auth.svg"
+          alt="Cas d'Utilisation Authentification">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-usecase-auth', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-usecase-auth', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-usecase-auth')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 3: Séquence Authentification & 2FA -->
+    <div id="tab-seq-auth" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>3. Diagramme de Séquence : Authentification Spring Security, JWT & 2FA</h2>
+          <p>Flux complet d'authentification : BCrypt, émission du challenge OTP, génération de la paire Access/Refresh
+            Token et Audit Trail.</p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/seq_auth.svg" target="_blank" download="seq_auth.svg">📥 Télécharger
+            SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-seq-auth" class="diagram-img" src="diagrams/seq_auth.svg" alt="Séquence Authentification">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-seq-auth', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-seq-auth', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-seq-auth')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 4: Diagramme de Classes -->
+    <div id="tab-classes" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>4. Diagramme de Classes &amp; Modèle de Données JPA</h2>
+          <p>Structure relationnelle complète — <strong>6 modules</strong> : Sécurité (RBAC, 2FA, Audit),
+            Notifications Multicanales (SMS, Push FCM, Email, In-App),
+            Découpage Administratif BF (<em>Locality/LocalityHierarchy — Closure Table</em>), Paramétrage &amp; Campagne
+            (<em>Objectifs par spéculation
+              &amp; région</em>), Collecte Bord Champ
+            (BRBC, FP), Stocks &amp; Logistique (FSJ, BEBC, Emballages).</p>
+        </div>
+        <div class="card-actions" id="classes-actions">
+          <a id="btn-dl-classes-svg" class="action-btn" href="diagrams/2_classes.svg" target="_blank"
+            download="2_classes.svg">📥 Télécharger
+            SVG</a>
+          <a id="btn-dl-classes-png" class="action-btn" href="diagrams/2_classes.png" target="_blank"
+            download="2_classes.png"
+            style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#10b981;">🖼️ Télécharger
+            PNG</a>
+        </div>
+      </div>
+
+      <!-- Sélecteur de sous-vues pour une lisibilité parfaite (Résolution Figure 8) -->
+      <div class="subnav-container">
+        <span class="subnav-label">Mode d'affichage &amp; Niveaux de zoom :</span>
+        <div class="subnav-tabs">
+          <button class="subtab-btn active" onclick="switchClassView('global', this)">Vue Globale Complète</button>
+          <button class="subtab-btn" onclick="switchClassView('sec_admin', this)">1. Sécurité, Notifications &amp;
+            Découpage BF</button>
+          <button class="subtab-btn" onclick="switchClassView('collecte_paie', this)">2. Collecte Bord Champ &amp;
+            Paiement</button>
+          <button class="subtab-btn" onclick="switchClassView('stocks_log', this)">3. Stocks, Magasins &amp; Transferts
+            (BEBC)</button>
+        </div>
+      </div>
+
+      <div class="viewer-wrapper">
+        <img id="img-classes" class="diagram-img" src="diagrams/2_classes.svg" alt="Diagramme de Classes ">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-classes', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-classes', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-classes')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 5: Séquence Collecte -->
+    <div id="tab-seq1" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>5. Séquence : Collecte Bord Champ & Contrôle Qualité</h2>
+          <p>Mode déconnecté (Offline-first) sur tablette mobile Android et synchronisation vers l'API Spring Boot.</p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/3_seq_collecte.svg" target="_blank" download="3_seq_collecte.svg">📥
+            Télécharger SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-seq1" class="diagram-img" src="diagrams/3_seq_collecte.svg" alt="Séquence Collecte Terrain">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-seq1', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-seq1', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-seq1')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 6: Séquence Validation -->
+    <div id="tab-seq2" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>6. Séquence : Examen SCP & Validation DCT</h2>
+          <p>Circuit d'approbation administrative sur l'application Web Angular et transmission officielle vers la DFC.
+          </p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/4_seq_validation.svg" target="_blank" download="4_seq_validation.svg">📥
+            Télécharger SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-seq2" class="diagram-img" src="diagrams/4_seq_validation.svg" alt="Séquence Validation DCT">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-seq2', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-seq2', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-seq2')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 7: Séquence Paiement -->
+    <div id="tab-seq3" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>7. Séquence : Initiation & Validation 2FA du Paiement</h2>
+          <p>Séparation stricte des tâches (SoD), authentification 2FA/OTP et déboursement via Mobile Money (Sank,
+            Coris, Moov).</p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/5_seq_paiement.svg" target="_blank" download="5_seq_paiement.svg">📥
+            Télécharger SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-seq3" class="diagram-img" src="diagrams/5_seq_paiement.svg" alt="Séquence Paiement Mobile">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-seq3', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-seq3', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-seq3')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- TAB 8: Séquence Transfert -->
+    <div id="tab-seq4" class="diagram-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2>8. Séquence : Enlèvement Comptoir & Réception Magasin</h2>
+          <p>Gestion logistique des camions, bordereaux de pesée contradictoire et détection automatique des écarts
+            (alerte DGSA).</p>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn" href="diagrams/6_seq_transfert.svg" target="_blank" download="6_seq_transfert.svg">📥
+            Télécharger SVG</a>
+        </div>
+      </div>
+      <div class="viewer-wrapper">
+        <img id="img-seq4" class="diagram-img" src="diagrams/6_seq_transfert.svg" alt="Séquence Transfert Magasins">
+      </div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomImg('img-seq4', 1.2)">🔍 Zoom +</button>
+        <button class="zoom-btn" onclick="zoomImg('img-seq4', 0.8)">🔍 Zoom -</button>
+        <button class="zoom-btn" onclick="resetZoom('img-seq4')">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const currentScales = {};
+
+    const classViews = {
+      'global': {
+        svg: 'diagrams/2_classes.svg',
+        png: 'diagrams/2_classes.png',
+        alt: "Modèle de données relationnel complet — Vue Globale"
+      },
+      'sec_admin': {
+        svg: 'diagrams/2a_classes_securite_admin.svg',
+        png: 'diagrams/2a_classes_securite_admin.png',
+        alt: "Zoom Modèle : Sécurité, Notifications Multicanales, Authentification 2FA et Découpage Administratif BF (17 Régions, 47 Provinces, 351 Communes)"
+      },
+      'collecte_paie': {
+        svg: 'diagrams/2b_classes_collecte_paiement.svg',
+        png: 'diagrams/2b_classes_collecte_paiement.png',
+        alt: "Zoom Modèle : Campagnes, Collecte Bord Champ (BRBC, FP) et Ordres de Paiement Mobile"
+      },
+      'stocks_log': {
+        svg: 'diagrams/2c_classes_stocks_logistique.svg',
+        png: 'diagrams/2c_classes_stocks_logistique.png',
+        alt: "Zoom Modèle : Fiches de Stocks Journalières (FSJ), Magasins Centraux, Emballages et BEBC"
+      }
+    };
+
+    function showTab(tabId, btn) {
+      document.querySelectorAll('.diagram-card').forEach(card => card.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      const targetCard = document.getElementById(tabId);
+      if (targetCard) targetCard.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    function switchClassView(viewKey, btn) {
+      const view = classViews[viewKey];
+      if (!view) return;
+      document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const img = document.getElementById('img-classes');
+      if (img) {
+        img.src = view.svg;
+        img.alt = view.alt;
+        resetZoom('img-classes');
+      }
+
+      const dlSvg = document.getElementById('btn-dl-classes-svg');
+      if (dlSvg) {
+        dlSvg.href = view.svg;
+        dlSvg.download = view.svg.split('/').pop();
+      }
+      const dlPng = document.getElementById('btn-dl-classes-png');
+      if (dlPng) {
+        dlPng.href = view.png;
+        dlPng.download = view.png.split('/').pop();
+      }
+    }
+
+    function zoomImg(imgId, factor) {
+      const img = document.getElementById(imgId);
+      if (!img) return;
+      currentScales[imgId] = (currentScales[imgId] || 1) * factor;
+      img.style.transform = `scale(${currentScales[imgId]})`;
+    }
+
+    function resetZoom(imgId) {
+      const img = document.getElementById(imgId);
+      if (!img) return;
+      currentScales[imgId] = 1;
+      img.style.transform = 'scale(1)';
+    }
+  </script>
+</body>
+
+</html>

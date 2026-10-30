@@ -1,0 +1,743 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <span class="intro-eyebrow">BURKINA FASO · SONAGESS</span>
+      <h1>Collecte Bord Champ</h1>
+      <p>
+        Enregistrement terrain, contrôle qualité, fiches de pesée et bordereaux de réception
+        BRBC.
+      </p>
+    </div>
+    <div class="page-header-actions">
+      @if (peutCreer()) {
+        <button mat-flat-button color="primary" (click)="basculerFormulaire()">
+          <mat-icon>{{ formulaireVisible() ? 'close' : 'add' }}</mat-icon>
+          {{ formulaireVisible() ? 'Fermer le formulaire' : 'Nouvelle collecte' }}
+        </button>
+      }
+      <button mat-stroked-button (click)="charger()" [disabled]="chargement()">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </header>
+
+  @if (erreur(); as message) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ message }}</span>
+    </div>
+  }
+
+  @if (formulaireVisible()) {
+    <div class="brbc-sheet-container">
+      <!-- En-tête officiel Bordereau de Collecte SONAGESS -->
+      <div class="brbc-sheet-header">
+        <div class="brbc-header-top">
+          <div class="brbc-republique">
+            <small>MINISTÈRE DE L'AGRICULTURE, DE L'EAU ET DES RESSOURCES ANIMALES ET HALIEUTIQUES</small>
+            <small>SONAGESS · Société Nationale de Gestion du Stock de Sécurité Alimentaire</small>
+          </div>
+          <div class="brbc-logo-center">
+            <img class="form-logo" src="assets/sonagess-logo.jpg" alt="Logo SONAGESS" />
+          </div>
+          <div class="brbc-certif-right">
+            <div class="brbc-pays">
+              <strong>BURKINA FASO</strong>
+              <span>La Patrie ou la Mort, nous vaincrons</span>
+            </div>
+            <span class="brbc-certif-badge">BRBC · Document officiel</span>
+            <small>Formulaire multi-spéculations · Validation 2FA</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="brbc-sheet-body">
+        <form [formGroup]="formulaire" (ngSubmit)="enregistrer()">
+          @if (sansComptoir()) {
+            <div class="error-banner" role="alert">
+              <mat-icon>error_outline</mat-icon>
+              <span>Aucun comptoir ne vous est affecté. Contactez l’administrateur pour rattacher votre compte à un comptoir.</span>
+            </div>
+          }
+          <!-- CADRAN DIGITAL DE BASCULE EN DIRECT (TOTAUX) -->
+          <div class="scale-terminal-box">
+            <div class="scale-terminal-header">
+              <div class="scale-indicator-dot"></div>
+              <span>Récapitulatif du bordereau</span>
+            </div>
+
+            <div class="scale-terminal-grid">
+              <div class="scale-metric">
+                <span class="scale-label">Nombre de Lignes</span>
+                <span class="scale-val">{{ lignesPesee().length }}</span>
+                <small class="scale-sub">Spéculation(s) sur ce BRBC</small>
+              </div>
+
+              <div class="scale-metric">
+                <span class="scale-label">Total Sacs</span>
+                <span class="scale-val">{{ totalSacsLignes() }}</span>
+                <small class="scale-sub">Emballages standard</small>
+              </div>
+
+              <div class="scale-metric scale-main-metric">
+                <span class="scale-label">Poids Net Cumulé</span>
+                <span class="scale-val-main">{{ totalPoidsNetLignes() | number:'1.0-2' }} <small>kg</small></span>
+                <small class="scale-sub">Somme de toutes les bascules</small>
+              </div>
+
+              <div class="scale-metric scale-money-metric">
+                <span class="scale-label">Net à Payer Producteur</span>
+                <span class="scale-val-money">{{ totalMontantLignes() | number:'1.0-0' }} <small>FCFA</small></span>
+                <small class="scale-sub">Total toutes spéculations</small>
+              </div>
+            </div>
+
+            @if (nbLignesNonConformes() > 0) {
+              <div class="scale-quality-banner banner-danger">
+                <mat-icon>warning</mat-icon>
+                <div class="banner-text">
+                  <strong>ATTENTION : {{ nbLignesNonConformes() }} ligne(s) non conforme(s) ou hors-seuil qualité.</strong>
+                </div>
+              </div>
+            } @else if (lignesPesee().length > 0) {
+              <div class="scale-quality-banner">
+                <mat-icon>verified</mat-icon>
+                <div class="banner-text">
+                  <span>Toutes les lignes respectent les seuils qualité SONAGESS.</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="form-grid">
+            <div class="form-section-title">1. Contexte de la collecte</div>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Campagne Céréalière</mat-label>
+              <mat-select
+                formControlName="campagneId"
+                (selectionChange)="changerCampagne($event.value)">
+                @for (campagne of campagnes(); track campagne.id) {
+                  <mat-option [value]="campagne.id">
+                    {{ campagne.code }} — {{ campagne.libelle }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Comptoir réceptionnaire</mat-label>
+              <mat-select formControlName="comptoirId">
+                @for (comptoir of comptoirs(); track comptoir.id) {
+                  <mat-option [value]="comptoir.id">
+                    {{ comptoir.code }} — {{ comptoir.nom }} ({{ comptoir.regionNom || 'Région' }})
+                  </mat-option>
+                }
+              </mat-select>
+              @if (comptoirAffecte()) {
+                <mat-icon matSuffix matTooltip="Votre comptoir d'affectation — non modifiable">lock</mat-icon>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Producteur vendeur</mat-label>
+              <mat-select formControlName="producteurId">
+                @for (producteur of producteurs(); track producteur.id) {
+                  <mat-option [value]="producteur.id">
+                    {{ producteur.nomPrenom }} · {{ producteur.telephoneMobileMoney }} ({{ producteur.operateurMobile }})
+                  </mat-option>
+                }
+              </mat-select>
+              @if (peutGererProducteurs()) {
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  matSuffix
+                  matTooltip="Nouveau producteur"
+                  (click)="ouvrirCreationProducteur()">
+                  <mat-icon>person_add</mat-icon>
+                </button>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Mode de règlement financier</mat-label>
+              <mat-select formControlName="modePaiement">
+                <mat-option value="MOBILE_MONEY">📱 Mobile Money (Orange / Moov)</mat-option>
+                <mat-option value="VIREMENT_BANCAIRE">🏦 Virement bancaire</mat-option>
+                <mat-option value="ESPECES">💵 Espèces (dérogatoire)</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
+              <mat-label>Observations (facultatif)</mat-label>
+              <textarea matInput rows="1" formControlName="observationsReceptionnaire" placeholder="Remarques sur le lot, état des sacs, numéro de scellé…"></textarea>
+            </mat-form-field>
+
+            <div class="form-section-title full-width-title">
+              2. Lignes de pesée — une ligne par spéculation
+            </div>
+
+            <div class="lignes-pesee-container full-width">
+              @for (ligne of lignesPesee(); track $index; let i = $index) {
+                <div class="ligne-pesee-card" [class.ligne-alerte]="ligneInvalide(ligne)">
+                  <div class="ligne-header">
+                    <span class="ligne-num">Ligne {{ i + 1 }}</span>
+                    <div class="ligne-resultats">
+                      <div class="lr-item">
+                        <span class="lr-label">Net</span>
+                        <span class="lr-val lr-net">{{ formaterPoidsNet(ligne) }} kg</span>
+                      </div>
+                      <div class="lr-item">
+                        <span class="lr-label">Prix/kg</span>
+                        <span class="lr-val">
+                          {{ prixUnitaireLigne(ligne) > 0 ? (prixUnitaireLigne(ligne) | number:'1.0-0') : '—' }} FCFA
+                        </span>
+                      </div>
+                      <div class="lr-item">
+                        <span class="lr-label">Montant</span>
+                        <span class="lr-val lr-montant">{{ formaterMontantLigne(ligne) }} FCFA</span>
+                      </div>
+                      @if (speculationDeLigne(ligne); as spec) {
+                        <div class="lr-item">
+                          <span class="lr-label">Humidité max</span>
+                          <span class="lr-val">{{ spec.seuilHumiditeMax }}%</span>
+                        </div>
+                      }
+                      @if (qualiteAlerteLigne(ligne)) {
+                        <div class="lr-item lr-alerte">
+                          <mat-icon>warning</mat-icon>
+                          <span>Humidité hors seuil !</span>
+                        </div>
+                      }
+                    </div>
+                    <div class="ligne-header-actions">
+                      <mat-checkbox
+                        [checked]="ligne.conforme"
+                        (change)="mettreAJourLigne(i, 'conforme', $event.checked)">
+                        Conforme
+                      </mat-checkbox>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        color="warn"
+                        matTooltip="Supprimer cette ligne"
+                        (click)="supprimerLigne(i)">
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="ligne-grid">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Spéculation</mat-label>
+                      <mat-select
+                        [value]="ligne.speculationId"
+                        (selectionChange)="mettreAJourLigne(i, 'speculationId', $event.value)">
+                        @for (speculation of speculations(); track speculation.id) {
+                          <mat-option
+                            [value]="speculation.id"
+                            [disabled]="speculationDejaUtilisee(speculation.id, i)">
+                            {{ speculation.nom }} ({{ speculation.code }})
+                          </mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Nombre de sacs</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="1"
+                        [value]="ligne.nombreSacs"
+                        (input)="mettreAJourLigne(i, 'nombreSacs', +($any($event.target).value))" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Poids brut (kg)</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        [value]="ligne.poidsBrutTotalKg"
+                        (input)="mettreAJourLigne(i, 'poidsBrutTotalKg', +($any($event.target).value))" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Tare emballage (kg)</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        [value]="ligne.tareEmballageKg"
+                        (input)="mettreAJourLigne(i, 'tareEmballageKg', +($any($event.target).value))" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Humidité (%)</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        [value]="ligne.tauxHumidite"
+                        (input)="mettreAJourLigne(i, 'tauxHumidite', +($any($event.target).value))" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Impuretés (%)</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        [value]="ligne.tauxImpuretes"
+                        (input)="mettreAJourLigne(i, 'tauxImpuretes', +($any($event.target).value))" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                      <mat-label>Grains avariés (%)</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        [value]="ligne.grainsAvaries"
+                        (input)="mettreAJourLigne(i, 'grainsAvaries', +($any($event.target).value))" />
+                    </mat-form-field>
+
+                    @if (!ligne.conforme || qualiteAlerteLigne(ligne)) {
+                      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
+                        <mat-label>Motif de non-conformité</mat-label>
+                        <input
+                          matInput
+                          [value]="ligne.motifRejet"
+                          (input)="mettreAJourLigne(i, 'motifRejet', $any($event.target).value)"
+                          placeholder="Humidité hors-norme, corps étrangers…" />
+                      </mat-form-field>
+                    }
+                  </div>
+                </div>
+              }
+
+              <button
+                mat-stroked-button
+                color="primary"
+                type="button"
+                class="add-ligne-btn"
+                (click)="ajouterLigne()">
+                <mat-icon>add_circle_outline</mat-icon>
+                Ajouter une spéculation au bordereau
+              </button>
+            </div>
+
+            <div class="form-actions brbc-actions full-width">
+              <button mat-button type="button" class="btn-cancel" (click)="basculerFormulaire()">Annuler</button>
+              <div class="total-recap">
+                Total : <strong>{{ totalSacsLignes() }} sac(s)</strong> ·
+                <strong>{{ totalPoidsNetLignes() | number:'1.0-0' }} kg</strong> ·
+                <strong>{{ totalMontantLignes() | number:'1.0-0' }} FCFA</strong>
+              </div>
+              <button
+                mat-flat-button
+                color="primary"
+                class="btn-submit"
+                type="submit"
+                [disabled]="enregistrement() || sansComptoir() || lignesPesee().length === 0">
+                <mat-icon>check_circle</mat-icon>
+                {{ enregistrement() ? 'Certification en cours…' : 'Émettre le BRBC (' + lignesPesee().length + ' ligne' + (lignesPesee().length > 1 ? 's' : '') + ')' }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <mat-card class="panel-card">
+    <mat-card-content>
+      <div class="panel-title-row">
+        <h2>Dossiers de collecte</h2>
+        <div class="filters-row">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Filtrer par statut</mat-label>
+            <mat-select [value]="statutFiltre()" (selectionChange)="changerStatut($event.value)">
+              <mat-option value="">Tous les statuts</mat-option>
+              @for (statut of statuts; track statut) {
+                <mat-option [value]="statut">{{ libelleStatut(statut) }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <span class="cell-sub">{{ totalElements() }} dossier(s)</span>
+        </div>
+      </div>
+
+      @if (chargement()) {
+        <div class="loading-block">
+          <mat-icon>hourglass_top</mat-icon>
+          Chargement des collectes…
+        </div>
+      } @else if (collectes().length === 0) {
+        <div class="empty-state">
+          <mat-icon>agriculture</mat-icon>
+          <strong>Aucune collecte enregistrée</strong>
+          <span>Les collectes terrain apparaîtront ici après synchronisation.</span>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Producteur</th>
+                <th>Comptoir</th>
+                <th>Spéculation</th>
+                <th class="align-right">Quantité</th>
+                <th>BRBC</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (collecte of collectes(); track collecte.id) {
+                <tr>
+                  <td>
+                    <span class="cell-title">{{ collecte.referenceLot }}</span>
+                    <span class="cell-sub">{{ formaterDate(collecte.dateHeureCollecte) }}</span>
+                  </td>
+                  <td>
+                    <span class="cell-title">{{ collecte.producteurNom }}</span>
+                    <span class="cell-sub">{{ collecte.telephoneProducteur }}</span>
+                  </td>
+                  <td>
+                    <span class="cell-title">{{ collecte.comptoirCode }}</span>
+                    <span class="cell-sub">{{ collecte.region ?? collecte.comptoirNom }}</span>
+                  </td>
+                  <td>{{ collecte.speculationNom }}</td>
+                  <td class="align-right">
+                    {{ collecte.quantiteKg | number: '1.0-0' }} kg
+                    <span class="cell-sub">{{ collecte.fichePesee?.nombreSacs ?? 0 }} sac(s)</span>
+                  </td>
+                  <td>
+                    @if (collecte.bordereau; as brbc) {
+                      <span class="cell-title">{{ brbc.numeroBrbc }}</span>
+                      <span class="cell-sub">
+                        {{ formaterMontant(collecte.montantNetCfa) }} ·
+                        {{ brbc.nombreLots }} lot{{ brbc.nombreLots > 1 ? 's' : '' }}
+                      </span>
+                    } @else {
+                      <span class="cell-sub">—</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="status-chip" [ngClass]="couleurStatut(collecte.statut)">
+                      {{ libelleStatut(collecte.statut) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-group">
+                      <button
+                        mat-icon-button
+                        matTooltip="Voir le détail"
+                        (click)="basculerDetail(collecte.id)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        color="primary"
+                        matTooltip="Imprimer / Afficher BRBC Officiel"
+                        (click)="ouvrirBrbc(collecte)">
+                        <mat-icon>receipt_long</mat-icon>
+                      </button>
+                      @if (peutExaminer() && collecte.statut === 'SYNCHRONISEE') {
+                        <button mat-stroked-button color="primary" (click)="examiner(collecte, true)">
+                          Approuver
+                        </button>
+                        <button mat-stroked-button color="warn" (click)="examiner(collecte, false)">
+                          Rejeter
+                        </button>
+                      }
+                      @if (peutValiderCollecte(collecte) && collecte.statut === 'EXAMINEE_SCP') {
+                        <button mat-flat-button color="primary" (click)="valider(collecte, true)">
+                          Valider DCT
+                        </button>
+                        <button mat-stroked-button color="warn" (click)="valider(collecte, false)">
+                          Rejeter
+                        </button>
+                      } @else if (
+                        peutValider() && estExaminateur(collecte) && collecte.statut === 'EXAMINEE_SCP'
+                      ) {
+                        <span class="cell-sub" matTooltip="Un même utilisateur ne peut pas examiner puis valider le même dossier.">
+                          Séparation des tâches : dossier examiné par vous
+                        </span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+                @if (collecteOuverte() === collecte.id) {
+                  <tr class="detail-row">
+                    <td colspan="8">
+                      <div class="detail-grid">
+                        <div class="detail-item">
+                          <span>Fiche de pesée</span>
+                          <strong>{{ collecte.fichePesee?.numeroFiche ?? '—' }}</strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Humidité / impuretés</span>
+                          <strong>
+                            {{ collecte.controleQualite?.tauxHumidite ?? '—' }} % /
+                            {{ collecte.controleQualite?.tauxImpuretes ?? '—' }} %
+                          </strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Grains avariés</span>
+                          <strong>{{ collecte.controleQualite?.grainsAvaries ?? '—' }} %</strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Conformité</span>
+                          <strong>
+                            {{ collecte.controleQualite?.conforme ? 'Conforme' : 'Non conforme' }}
+                          </strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Poids brut / tare</span>
+                          <strong>
+                            {{ collecte.fichePesee?.poidsBrutTotalKg ?? '—' }} kg /
+                            {{ collecte.fichePesee?.tareEmballageKg ?? '—' }} kg
+                          </strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Prix unitaire du lot</span>
+                          <strong>{{ formaterMontant(collecte.prixUnitaireKg) }} / kg</strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Montant du lot</span>
+                          <strong>{{ formaterMontant(collecte.montantNetCfa) }}</strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Montant en lettres du BRBC</span>
+                          <strong>{{ collecte.bordereau?.montantEnLettres ?? '—' }}</strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Examinateur SCP</span>
+                          <strong>
+                            {{ collecte.examinateur ?? '—' }}
+                            <span class="cell-sub">{{ formaterDate(collecte.dateExamen) }}</span>
+                          </strong>
+                        </div>
+                        <div class="detail-item">
+                          <span>Validateur DCT</span>
+                          <strong>
+                            {{ collecte.validateur ?? '—' }}
+                            <span class="cell-sub">{{ formaterDate(collecte.dateValidation) }}</span>
+                          </strong>
+                        </div>
+                        @if (collecte.motifRejet) {
+                          <div class="detail-item">
+                            <span>Motif de rejet</span>
+                            <strong>{{ collecte.motifRejet }}</strong>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-row">
+          <button mat-button (click)="pagePrecedente()" [disabled]="page() === 0">
+            <mat-icon>chevron_left</mat-icon>
+            Précédent
+          </button>
+          <span>Page {{ page() + 1 }} / {{ totalPages() || 1 }}</span>
+          <button mat-button (click)="pageSuivante()" [disabled]="page() + 1 >= totalPages()">
+            Suivant
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+
+@if (brbcVisualise(); as c) {
+  <div class="brbc-document-overlay" (click)="fermerBrbc()">
+    <div class="brbc-modal-container" (click)="$event.stopPropagation()">
+      <div class="brbc-modal-toolbar no-print">
+        <div class="toolbar-title">
+          <mat-icon>receipt_long</mat-icon>
+          <span>Jumeau Numérique BRBC — Bordereau Officiel Bord Champ</span>
+        </div>
+        <div class="toolbar-actions">
+          <button mat-flat-button class="btn-print" (click)="imprimerBrbc()">
+            <mat-icon>print</mat-icon> Imprimer Liasse Officielle
+          </button>
+          <button mat-icon-button class="btn-close" (click)="fermerBrbc()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Document papier officiel haute fidélité -->
+      <div class="brbc-paper-sheet">
+        <div class="brbc-faso-border"></div>
+        
+        <div class="brbc-header">
+          <div class="header-left">
+            <div class="ministere">MINISTÈRE DE L'AGRICULTURE, DE L'EAU ET DES RESSOURCES ANIMALES ET HALIEUTIQUES</div>
+            <div class="societe">SONAGESS</div>
+            <div class="societe-sub">Société Nationale de Gestion du Stock de Sécurité Alimentaire</div>
+          </div>
+          <div class="header-center">
+            <div class="official-logo">
+              <img src="assets/sonagess-logo.jpg" alt="Logo SONAGESS" />
+            </div>
+            <div class="doc-code">DCT / BRBC-{{ c.campagneCode }}</div>
+          </div>
+          <div class="header-right">
+            <div class="pays-block">
+              <div class="republique">BURKINA FASO</div>
+              <div class="devise">La Patrie ou la Mort, nous vaincrons</div>
+            </div>
+            <div class="brbc-badge">DOCUMENT OFFICIEL</div>
+            <div class="souche-num">SOUCHE N° <strong>{{ c.bordereau?.numeroBrbc || ('BRBC-' + c.referenceLot) }}</strong></div>
+            <div class="doc-date">Date : {{ formaterDate(c.dateHeureCollecte) }}</div>
+          </div>
+        </div>
+
+        <div class="brbc-title-box">
+          <h1>BORDEREAU DE RÉCEPTION BORD CHAMP (BRBC)</h1>
+          <p>Collecte directe de céréales &amp; légumineuses — Campagne {{ c.campagneCode }}</p>
+        </div>
+
+        <div class="brbc-grid-info">
+          <div class="info-block">
+            <div class="block-title"><mat-icon>store</mat-icon> LOCALISATION & COMPTOIR</div>
+            <div class="info-row"><span>Région / Province :</span> <strong>{{ c.region || 'CENTRE-OUEST' }}</strong></div>
+            <div class="info-row"><span>Comptoir Rural :</span> <strong>{{ c.comptoirNom }} ({{ c.comptoirCode }})</strong></div>
+            <div class="info-row"><span>Lieu d'enlèvement :</span> <strong>Bord champ / Comptoir local</strong></div>
+          </div>
+
+          <div class="info-block">
+            <div class="block-title"><mat-icon>person</mat-icon> PRODUCTEUR / APPORTEUR</div>
+            <div class="info-row"><span>Nom & Prénom :</span> <strong>{{ c.producteurNom }}</strong></div>
+            <div class="info-row"><span>Contact Mobile :</span> <strong>{{ c.telephoneProducteur }}</strong></div>
+            <div class="info-row"><span>Mode de Paiement :</span> <strong>Paiement Mobile Money ({{ c.bordereau?.modePaiement || 'MOBILE_MONEY' }})</strong></div>
+          </div>
+        </div>
+
+        <div class="brbc-table-container">
+          <table class="brbc-official-table">
+            <thead>
+              <tr>
+                <th>Désignation Spéculation</th>
+                <th class="align-center">Sacs</th>
+                <th class="align-right">Poids Brut (kg)</th>
+                <th class="align-right">Tare (- kg)</th>
+                <th class="align-right">Poids Net (kg)</th>
+                <th class="align-right">Prix / kg</th>
+                <th class="align-right">Montant Total (FCFA)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ligne of brbcLignes(); track ligne.id) {
+                <tr>
+                  <td>
+                    <strong>{{ ligne.speculationNom }}</strong>
+                    <span class="cell-sub">Lot {{ ligne.referenceLot }}</span>
+                  </td>
+                  <td class="align-center">{{ ligne.fichePesee?.nombreSacs ?? 1 }}</td>
+                  <td class="align-right">{{ ligne.fichePesee?.poidsBrutTotalKg ?? ligne.quantiteKg | number:'1.0-0' }}</td>
+                  <td class="align-right">{{ ligne.fichePesee?.tareEmballageKg ?? 0 | number:'1.0-0' }}</td>
+                  <td class="align-right highlight-net"><strong>{{ ligne.quantiteKg | number:'1.0-0' }} kg</strong></td>
+                  <td class="align-right">{{ ligne.prixUnitaireKg | number:'1.0-0' }} CFA</td>
+                  <td class="align-right highlight-price"><strong>{{ ligne.montantNetCfa | number:'1.0-0' }} CFA</strong></td>
+                </tr>
+              }
+              @if (brbcLignes().length > 1) {
+                <tr class="brbc-total-row">
+                  <td><strong>TOTAL GÉNÉRAL</strong> — {{ brbcLignes().length }} lot{{ brbcLignes().length > 1 ? 's' : '' }}</td>
+                  <td class="align-center"><strong>{{ brbcTotalSacs() }}</strong></td>
+                  <td class="align-right">—</td>
+                  <td class="align-right">—</td>
+                  <td class="align-right highlight-net"><strong>{{ brbcTotalPoidsNet() | number:'1.0-0' }} kg</strong></td>
+                  <td class="align-right">—</td>
+                  <td class="align-right highlight-price"><strong>{{ brbcTotalMontant() | number:'1.0-0' }} CFA</strong></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="brbc-quality-box">
+          @for (ligne of brbcLignes(); track ligne.id) {
+            <div class="q-item">
+              <span>{{ ligne.speculationNom }} — Humidité :</span>
+              <strong>{{ ligne.controleQualite?.tauxHumidite ?? '—' }} %</strong>
+              <span>/ Impuretés :</span>
+              <strong>{{ ligne.controleQualite?.tauxImpuretes ?? '—' }} %</strong>
+              <span>/ Avariés :</span>
+              <strong>{{ ligne.controleQualite?.grainsAvaries ?? '—' }} %</strong>
+            </div>
+          }
+          <div class="q-item">
+            <span>Diagnostic Qualité :</span>
+            @if (brbcToutesConformes()) {
+              <strong class="badge-conforme">CONFORME AUX NORMES SONAGESS</strong>
+            } @else {
+              <strong class="badge-non-conforme">NON CONFORME</strong>
+            }
+          </div>
+        </div>
+
+        <div class="brbc-words-box">
+          <span class="label">Montant net arrêté à la somme de :</span>
+          <div class="words-value">{{ c.bordereau?.montantEnLettres || brbcTotalEnLettres() }}</div>
+        </div>
+
+        <div class="brbc-signatures-grid">
+          <div class="sig-box">
+            <div class="sig-title">L'Agent de Pesée / Réceptionnaire</div>
+            <div class="sig-sub">Nom: {{ c.examinateur || 'Agent SONAGESS' }}</div>
+            <div class="sig-space">
+              <span class="stamp-mark">VISÉ PAR L'AGENT</span>
+            </div>
+          </div>
+          <div class="sig-box">
+            <div class="sig-title">Le Producteur / Vendeur</div>
+            <div class="sig-sub">Empreinte digitale / Signature</div>
+            <div class="sig-space fingerprint-space">
+              <div class="thumbprint-box">
+                <mat-icon>fingerprint</mat-icon>
+                <span>Empreinte</span>
+              </div>
+            </div>
+          </div>
+          <div class="sig-box">
+            <div class="sig-title">Le Chef de Comptoir / Sceau</div>
+            <div class="sig-sub">Approbation 2FA & Décharge</div>
+            <div class="sig-space">
+              <div class="sonagess-stamp">
+                <span class="s-top">SONAGESS BURKINA</span>
+                <span class="s-mid">COMPTOIR CERTIFIÉ</span>
+                <span class="s-bot">2FA CONTROL PASSED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="brbc-footer-legal">
+          <div class="hash-code">Empreinte SHA-256 : {{ c.bordereau?.numeroBrbc || c.referenceLot }}-SECURE-SONAGESS-2026-BF</div>
+          <div class="legal-text">Document édité par la plateforme CBC SONAGESS — République du Burkina Faso — Conservation obligatoire en liasse de comptoir.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

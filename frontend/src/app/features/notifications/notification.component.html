@@ -1,0 +1,94 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <span class="intro-eyebrow">BURKINA FASO · SONAGESS</span>
+      <h1>Notifications</h1>
+      <p>Alertes in-app, accusés SMS et événements des workflows collecte, paiement et stock.</p>
+    </div>
+    <div class="page-header-actions">
+      <span class="cell-sub">{{ totalElements() }} notification(s)</span>
+      <button mat-stroked-button (click)="charger()" [disabled]="chargement()">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </header>
+
+  @if (erreur(); as message) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ message }}</span>
+    </div>
+  }
+
+  @if (chargement()) {
+    <div class="loading-block">
+      <mat-icon>hourglass_top</mat-icon>
+      Chargement des notifications…
+    </div>
+  } @else if (notifications().length === 0) {
+    <mat-card class="panel-card">
+      <div class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <strong>Aucune notification</strong>
+        <span>Les événements qui vous concernent apparaîtront ici.</span>
+      </div>
+    </mat-card>
+  } @else {
+    <div class="notification-list">
+      @for (notification of notifications(); track notification.id) {
+        <mat-card
+          class="panel-card notification-card"
+          [class.non-lue]="notification.statut !== 'LU'">
+          <mat-card-content>
+            <div class="notification-head">
+              <div class="notification-icon">
+                <mat-icon>{{ notification.canal === 'SMS' ? 'sms' : 'notifications' }}</mat-icon>
+              </div>
+              <div class="notification-main">
+                <div class="notification-title-row">
+                  <strong>{{ notification.titre }}</strong>
+                  <span class="status-chip" [ngClass]="couleurStatut(notification.statut)">
+                    {{ libelleStatut(notification.statut) }}
+                  </span>
+                  <span class="status-chip neutre">{{ canal(notification.canal) }}</span>
+                </div>
+                <p>{{ notification.message }}</p>
+                <div class="notification-meta">
+                  <span>{{ formaterDate(notification.dateCreation) }}</span>
+                  @if (notification.collecteId) {
+                    <span>Collecte #{{ notification.collecteId }}</span>
+                  }
+                  @if (notification.ordrePaiementId) {
+                    <span>Paiement #{{ notification.ordrePaiementId }}</span>
+                  }
+                  @if (notification.bordereauEnlevementId) {
+                    <span>BEBC #{{ notification.bordereauEnlevementId }}</span>
+                  }
+                </div>
+              </div>
+              @if (notification.statut !== 'LU') {
+                <button mat-stroked-button (click)="marquerLue(notification)">
+                  <mat-icon>done</mat-icon>
+                  Marquer lue
+                </button>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <div class="pagination-row">
+      <button mat-button (click)="pagePrecedente()" [disabled]="page() === 0">
+        <mat-icon>chevron_left</mat-icon>
+        Précédent
+      </button>
+      <span>Page {{ page() + 1 }} / {{ totalPages() || 1 }}</span>
+      <button mat-button (click)="pageSuivante()" [disabled]="page() + 1 >= totalPages()">
+        Suivant
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  }
+</div>

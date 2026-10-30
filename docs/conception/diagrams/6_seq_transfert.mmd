@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    actor Transp as Chauffeur Transporteur
+    actor Agent as Agent Comptoir
+    actor Mag as Magasinier
+    participant API as Backend Spring Boot
+    actor SGS as Chef SGS (Contrôle stocks)
+
+    Agent->>API: Saisie chargement camion (Sacs, Tonnage)
+    Transp->>Agent: Signature bordereau d'enlèvement
+    Agent->>API: Valider enlèvement (Statut: EN_TRANSIT)
+    
+    Mag->>API: Saisie déchargement au magasin récepteur
+    API->>API: Calcul Ecart = TonnageEnlevé - TonnageReçu
+    alt Ecart <= Tolérance réglementaire
+        API->>API: Valide la réception (Stock magasin incrémenté)
+    else Ecart > Tolérance
+        API->>API: Statut -> ALERTE_DGSA
+        API->>SGS: Émission alerte perte de grains / anomalie
+    end

@@ -1,0 +1,237 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <span class="intro-eyebrow">BURKINA FASO · SONAGESS</span>
+      <h1>Paiements Mobile Money &amp; Validation 2FA</h1>
+      <p>
+        Initiation des ordres depuis les BRBC validés, double validation et rapprochement
+        opérateur.
+      </p>
+    </div>
+    <div class="page-header-actions">
+      <button mat-stroked-button (click)="charger()" [disabled]="chargement()">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </header>
+
+  @if (erreur(); as message) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ message }}</span>
+    </div>
+  }
+
+  @if (paiement2fa(); as paiement) {
+    <mat-card class="panel-card otp-card">
+      <mat-card-content>
+        <div class="otp-header">
+          <mat-icon>shield</mat-icon>
+          <div>
+            <h2>Validation 2FA — {{ paiement.referenceTransaction }}</h2>
+            <p>
+              {{ formaterMontant(paiement.montantPayeCfa) }} vers
+              {{ paiement.telephoneDestination }} ({{ paiement.operateur }}).
+            </p>
+          </div>
+        </div>
+        @if (codeDemo(); as demo) {
+          <div class="info-banner">
+            <mat-icon>info</mat-icon>
+            <span>Mode démonstration — code OTP : <strong>{{ demo }}</strong></span>
+          </div>
+        }
+        <div class="otp-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Code OTP (6 chiffres)</mat-label>
+            <input
+              matInput
+              inputmode="numeric"
+              maxlength="6"
+              [ngModel]="codeOtp()"
+              (ngModelChange)="codeOtp.set($event)" />
+          </mat-form-field>
+          <button
+            mat-flat-button
+            color="primary"
+            [disabled]="validationEnCours()"
+            (click)="valider2fa()">
+            <mat-icon>verified_user</mat-icon>
+            Confirmer le paiement
+          </button>
+          <button mat-button (click)="annuler2fa()">Annuler</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <mat-card class="panel-card">
+    <mat-card-content>
+      <div class="panel-title-row">
+        <h2>BRBC en attente d'initiation</h2>
+        <span class="cell-sub">{{ candidats().length }} bordereau(x) éligible(s)</span>
+      </div>
+
+      @if (!peutInitier()) {
+        <div class="info-banner">
+          <mat-icon>lock</mat-icon>
+          <span>Votre profil ne dispose pas du droit d'initiation des paiements.</span>
+        </div>
+      } @else if (candidats().length === 0) {
+        <div class="empty-state">
+          <mat-icon>payments</mat-icon>
+          <strong>Aucun BRBC à payer</strong>
+          <span>Les bordereaux validés par la DCT apparaîtront ici.</span>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>BRBC</th>
+                <th>Producteur</th>
+                <th>Comptoir</th>
+                <th>Campagne</th>
+                <th class="align-right">Montant</th>
+                <th>Opérateur</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (candidat of candidats(); track candidat.collecte.id) {
+                <tr>
+                  <td>
+                    <span class="cell-title">{{ candidat.numeroBrbc }}</span>
+                    <span class="cell-sub">
+                      {{ candidat.nombreLots }} lot{{ candidat.nombreLots > 1 ? 's' : '' }} ·
+                      {{ candidat.collecte.referenceLot }}
+                    </span>
+                  </td>
+                  <td>{{ candidat.collecte.producteurNom }}</td>
+                  <td>{{ candidat.collecte.comptoirNom }}</td>
+                  <td>{{ candidat.collecte.campagneCode }}</td>
+                  <td class="align-right">{{ formaterMontant(candidat.montant) }}</td>
+                  <td>{{ candidat.collecte.operateurMobile }}</td>
+                  <td>
+                    <button
+                      mat-flat-button
+                      color="primary"
+                      [disabled]="initEnCours() !== null"
+                      (click)="initier(candidat)">
+                      <mat-icon>send</mat-icon>
+                      Initier
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="panel-card">
+    <mat-card-content>
+      <div class="panel-title-row">
+        <h2>Ordres de paiement</h2>
+        <div class="filters-row">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Filtrer par statut</mat-label>
+            <mat-select [value]="statutFiltre()" (selectionChange)="changerStatut($event.value)">
+              <mat-option value="">Tous les statuts</mat-option>
+              @for (statut of statuts; track statut) {
+                <mat-option [value]="statut">{{ libelleStatut(statut) }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <span class="cell-sub">{{ paiements().length }} ordre(s)</span>
+        </div>
+      </div>
+
+      @if (chargement()) {
+        <div class="loading-block">
+          <mat-icon>hourglass_top</mat-icon>
+          Chargement des paiements…
+        </div>
+      } @else if (paiements().length === 0) {
+        <div class="empty-state">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <strong>Aucun ordre de paiement</strong>
+          <span>Les ordres initiés apparaîtront ici.</span>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>BRBC / producteur</th>
+                <th class="align-right">Montant</th>
+                <th>Destination</th>
+                <th>Initiateur</th>
+                <th>Validation</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (paiement of paiements(); track paiement.id) {
+                <tr>
+                  <td>
+                    <span class="cell-title">{{ paiement.referenceTransaction }}</span>
+                    <span class="cell-sub">{{ formaterDate(paiement.dateInitiation) }}</span>
+                  </td>
+                  <td>
+                    <span class="cell-title">{{ paiement.numeroBrbc }}</span>
+                    <span class="cell-sub">
+                      {{ paiement.producteurNom }} ·
+                      {{ paiement.nombreLots }} lot{{ paiement.nombreLots > 1 ? 's' : '' }}
+                    </span>
+                  </td>
+                  <td class="align-right">{{ formaterMontant(paiement.montantPayeCfa) }}</td>
+                  <td>
+                    {{ paiement.operateur }}
+                    <span class="cell-sub">{{ paiement.telephoneDestination }}</span>
+                  </td>
+                  <td>{{ paiement.initiateur ?? '—' }}</td>
+                  <td>
+                    {{ paiement.validateur ?? '—' }}
+                    <span class="cell-sub">{{ formaterDate(paiement.dateValidation2FA) }}</span>
+                  </td>
+                  <td>
+                    <span class="status-chip" [ngClass]="couleurStatut(paiement.statut)">
+                      {{ libelleStatut(paiement.statut) }}
+                    </span>
+                    @if (paiement.motifRejet) {
+                      <span class="cell-sub">{{ paiement.motifRejet }}</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="action-group">
+                      @if (paiement.statut === 'INITIE' && peutValider()) {
+                        <button mat-flat-button color="primary" (click)="activer2fa(paiement)">
+                          <mat-icon>verified_user</mat-icon>
+                          Valider 2FA
+                        </button>
+                      }
+                      @if (paiement.statut === 'INITIE' && peutRejeter()) {
+                        <button mat-stroked-button color="warn" (click)="rejeter(paiement)">
+                          Rejeter
+                        </button>
+                      }
+                      @if (paiement.referenceOperateur) {
+                        <span class="cell-sub">Réf. {{ paiement.referenceOperateur }}</span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

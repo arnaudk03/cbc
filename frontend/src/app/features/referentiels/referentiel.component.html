@@ -1,0 +1,590 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <span class="intro-eyebrow">BURKINA FASO · SONAGESS</span>
+      <h1>Paramétrage &amp; Découpage Territorial</h1>
+      <p>
+        Paramétrage des campagnes, prix, comptoirs, producteurs, magasins, spéculations et
+        utilisateurs. Les 17 régions officielles restent en lecture seule.
+      </p>
+    </div>
+    <div class="page-header-actions">
+      <button mat-stroked-button (click)="charger()" [disabled]="chargement()">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </header>
+
+  @if (erreur(); as message) {
+  <div class="error-banner" role="alert">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ message }}</span>
+  </div>
+  }
+
+  @if (chargement()) {
+  <div class="loading-block">
+    <mat-icon>hourglass_top</mat-icon>
+    Chargement du paramétrage…
+  </div>
+  } @else {
+  <mat-tab-group animationDuration="150ms">
+    <mat-tab label="Campagnes">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <span class="cell-sub">{{ campagnes().length }} campagne(s)</span>
+          @if (peutAdministrer()) {
+          <button mat-flat-button color="primary" (click)="creerCampagne()">
+            <mat-icon>add</mat-icon>
+            Nouvelle campagne
+          </button>
+          }
+        </div>
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Libellé</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th class="align-right">Objectif</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campagne of campagnes(); track campagne.id) {
+              <tr>
+                <td class="cell-title">{{ campagne.code }}</td>
+                <td>{{ campagne.libelle }}</td>
+                <td>{{ formaterDate(campagne.dateDebut) }}</td>
+                <td>{{ formaterDate(campagne.dateFin) }}</td>
+                <td class="align-right">
+                  {{ campagne.objectifTotalTonnes | number: '1.0-2' }} t
+                </td>
+                <td>
+                  <span class="status-chip" [ngClass]="campagne.statut === 'OUVERTE' ? 'succes' : 'neutre'">
+                    {{ campagne.statut }}
+                  </span>
+                </td>
+                <td>
+                  @if (peutAdministrer()) {
+                  <div class="row-actions">
+                    <button mat-icon-button aria-label="Modifier la campagne" (click)="modifierCampagne(campagne)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" aria-label="Supprimer la campagne"
+                      (click)="supprimerCampagne(campagne)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                  } @else {
+                  <span class="cell-sub">—</span>
+                  }
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="7" class="empty-cell">Aucune campagne enregistrée.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Prix garantis">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <div class="toolbar-filters">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Campagne</mat-label>
+              <mat-select [value]="campagnePrix()" (selectionChange)="chargerPrix($event.value)">
+                @for (campagne of campagnes(); track campagne.id) {
+                <mat-option [value]="campagne.id">{{ campagne.code }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <span class="cell-sub">{{ prix().length }} prix</span>
+          </div>
+          @if (peutGererPrix()) {
+          <button mat-flat-button color="primary" (click)="creerPrix()">
+            <mat-icon>add</mat-icon>
+            Nouveau prix
+          </button>
+          }
+        </div>
+
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Spéculation</th>
+                <th>Localité</th>
+                <th class="align-right">Prix / kg</th>
+                <th>Date d'effet</th>
+                <th>Statut</th>
+                <th>Approbation</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (prixItem of prix(); track prixItem.id) {
+              <tr>
+                <td>
+                  <span class="cell-title">{{ prixItem.speculationNom }}</span>
+                  <span class="cell-sub">{{ prixItem.speculationCode }}</span>
+                </td>
+                <td>{{ prixItem.localityNom ?? 'National' }}</td>
+                <td class="align-right">{{ formaterMontant(prixItem.prixUnitaireKg) }}</td>
+                <td>{{ formaterDate(prixItem.dateEffet) }}</td>
+                <td>
+                  <span class="status-chip" [ngClass]="couleurStatutPrix(prixItem.statut)">
+                    {{ libelleStatutPrix(prixItem.statut) }}
+                  </span>
+                </td>
+                <td>
+                  {{ prixItem.approuvePar ?? '—' }}
+                  <span class="cell-sub">{{ formaterDate(prixItem.dateApprobation) }}</span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    @if (
+                    peutValiderPrix() && prixItem.statut === 'EN_ATTENTE_APPROBATION'
+                    ) {
+                    <button mat-flat-button color="primary" (click)="approuver(prixItem)">
+                      Approuver
+                    </button>
+                    <button mat-stroked-button (click)="rejeterPrix(prixItem)">
+                      Rejeter
+                    </button>
+                    }
+                    @if (peutValiderPrix() && prixItem.statut === 'APPROUVE') {
+                    <button mat-stroked-button (click)="rejeterPrix(prixItem)">
+                      Désactiver
+                    </button>
+                    }
+                    @if (peutGererPrix() && prixItem.statut !== 'APPROUVE') {
+                    <button mat-icon-button aria-label="Modifier le prix" (click)="modifierPrix(prixItem)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    }
+                    @if (peutValiderPrix() && prixItem.statut !== 'APPROUVE') {
+                    <button mat-icon-button color="warn" aria-label="Supprimer le prix"
+                      (click)="supprimerPrix(prixItem)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="7" class="empty-cell">
+                  Aucun prix garanti pour cette campagne.
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Comptoirs">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <span class="cell-sub">{{ comptoirs().length }} comptoir(s)</span>
+          @if (peutAdministrer()) {
+          <button mat-flat-button color="primary" (click)="creerComptoir()">
+            <mat-icon>add</mat-icon>
+            Nouveau comptoir
+          </button>
+          }
+        </div>
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Localité</th>
+                <th>Région</th>
+                <th>Type</th>
+                <th class="align-right">Capacité</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (comptoir of comptoirs(); track comptoir.id) {
+              <tr>
+                <td class="cell-title">{{ comptoir.code }}</td>
+                <td>{{ comptoir.nom }}</td>
+                <td>{{ comptoir.localityNom }}</td>
+                <td>{{ comptoir.regionNom ?? '—' }}</td>
+                <td>{{ comptoir.type }}</td>
+                <td class="align-right">
+                  {{ comptoir.capaciteStockageKg | number: '1.0-0' }} kg
+                </td>
+                <td>
+                  <span class="status-chip" [ngClass]="comptoir.actif ? 'succes' : 'neutre'">
+                    {{ comptoir.actif ? 'Actif' : 'Fermé' }}
+                  </span>
+                </td>
+                <td>
+                  @if (peutAdministrer()) {
+                  <div class="row-actions">
+                    <button mat-stroked-button (click)="basculerComptoir(comptoir)">
+                      {{ comptoir.actif ? 'Fermer' : 'Ouvrir' }}
+                    </button>
+                    <button mat-icon-button aria-label="Modifier le comptoir" (click)="modifierComptoir(comptoir)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" aria-label="Supprimer le comptoir"
+                      (click)="supprimerComptoir(comptoir)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                  } @else {
+                  <span class="cell-sub">—</span>
+                  }
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="8" class="empty-cell">Aucun comptoir enregistré.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Producteurs">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <div class="toolbar-filters">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Rechercher un producteur</mat-label>
+              <input matInput [ngModel]="rechercheProducteur()" (ngModelChange)="rechercheProducteur.set($event)"
+                placeholder="Nom, téléphone ou CNIB" />
+            </mat-form-field>
+            <span class="cell-sub">{{ producteursFiltres().length }} producteur(s)</span>
+          </div>
+          @if (peutGererProducteurs()) {
+          <button mat-flat-button color="primary" (click)="creerProducteur()">
+            <mat-icon>add</mat-icon>
+            Nouveau producteur
+          </button>
+          }
+        </div>
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Nom et prénom</th>
+                <th>Téléphone Mobile Money</th>
+                <th>Opérateur</th>
+                <th>CNIB</th>
+                <th>Localité</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (producteur of producteursFiltres(); track producteur.id) {
+              <tr>
+                <td class="cell-title">{{ producteur.nomPrenom }}</td>
+                <td>{{ producteur.telephoneMobileMoney }}</td>
+                <td>{{ producteur.operateurMobile }}</td>
+                <td>
+                  {{ producteur.cnibNumero }}
+                  <span class="cell-sub">{{ producteur.cnibLieuDelivrance ?? '—' }}</span>
+                </td>
+                <td>{{ producteur.localityNom ?? '—' }}</td>
+                <td>
+                  @if (peutGererProducteurs()) {
+                  <div class="row-actions">
+                    <button mat-icon-button aria-label="Modifier le producteur"
+                      (click)="modifierProducteur(producteur)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" aria-label="Supprimer le producteur"
+                      (click)="supprimerProducteur(producteur)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                  } @else {
+                  <span class="cell-sub">—</span>
+                  }
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="6" class="empty-cell">Aucun producteur trouvé.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Magasins">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <span class="cell-sub">{{ magasins().length }} magasin(s)</span>
+          @if (peutGererMagasins()) {
+          <button mat-flat-button color="primary" (click)="creerMagasin()">
+            <mat-icon>add</mat-icon>
+            Nouveau magasin
+          </button>
+          }
+        </div>
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Ville</th>
+                <th class="align-right">Capacité</th>
+                <th class="align-right">Stock actuel</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (magasin of magasins(); track magasin.id) {
+              <tr>
+                <td class="cell-title">{{ magasin.codeMagasin }}</td>
+                <td>{{ magasin.nom }}</td>
+                <td>{{ magasin.ville }}</td>
+                <td class="align-right">
+                  {{ magasin.capaciteTotaleTonnes | number: '1.0-2' }} t
+                </td>
+                <td class="align-right">
+                  {{ magasin.stockActuelTonnes | number: '1.0-2' }} t
+                </td>
+                <td>
+                  <span class="status-chip" [ngClass]="magasin.actif ? 'succes' : 'neutre'">
+                    {{ magasin.actif ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                <td>
+                  @if (peutGererMagasins()) {
+                  <div class="row-actions">
+                    <button mat-icon-button aria-label="Modifier le magasin" (click)="modifierMagasin(magasin)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" aria-label="Supprimer le magasin"
+                      (click)="supprimerMagasin(magasin)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                  } @else {
+                  <span class="cell-sub">—</span>
+                  }
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="7" class="empty-cell">Aucun magasin enregistré.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Spéculations">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <span class="cell-sub">{{ speculations().length }} spéculation(s)</span>
+          @if (peutAdministrer()) {
+          <button mat-flat-button color="primary" (click)="creerSpeculation()">
+            <mat-icon>add</mat-icon>
+            Nouvelle spéculation
+          </button>
+          }
+        </div>
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th class="align-right">Humidité max</th>
+                <th class="align-right">Impuretés max</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (speculation of speculations(); track speculation.id) {
+              <tr>
+                <td class="cell-title">{{ speculation.code }}</td>
+                <td>{{ speculation.nom }}</td>
+                <td class="align-right">{{ speculation.seuilHumiditeMax }} %</td>
+                <td class="align-right">{{ speculation.seuilImpureteMax }} %</td>
+                <td>
+                  <span class="status-chip" [ngClass]="speculation.active ? 'succes' : 'neutre'">
+                    {{ speculation.active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>
+                  @if (peutAdministrer()) {
+                  <div class="row-actions">
+                    <button mat-icon-button aria-label="Modifier la spéculation"
+                      (click)="modifierSpeculation(speculation)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" aria-label="Supprimer la spéculation"
+                      (click)="supprimerSpeculation(speculation)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                  } @else {
+                  <span class="cell-sub">—</span>
+                  }
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="6" class="empty-cell">Aucune spéculation enregistrée.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- <mat-tab label="Régions">
+        <div class="tab-content">
+          <div class="toolbar-row">
+            <span class="cell-sub">
+              {{ regions().length }} régions officielles — référentiel en lecture seule
+            </span>
+          </div>
+          <div class="region-grid">
+            @for (region of regions(); track region.id) {
+              <mat-card class="panel-card region-card">
+                <div class="region-icon">
+                  <mat-icon>public</mat-icon>
+                </div>
+                <div>
+                  <strong>{{ region.name }}</strong>
+                  <span>{{ region.code }}</span>
+                </div>
+              </mat-card>
+            }
+          </div>
+        </div>
+      </mat-tab> -->
+
+    @if (peutGererUtilisateurs()) {
+    <mat-tab label="Utilisateurs">
+      <div class="tab-content">
+        <div class="toolbar-row">
+          <div class="toolbar-filters">
+            <span class="cell-sub">{{ utilisateurs().length }} utilisateur(s)</span>
+            <button mat-stroked-button (click)="chargerUtilisateurs()" [disabled]="chargementUtilisateurs()">
+              <mat-icon>refresh</mat-icon>
+              Actualiser
+            </button>
+          </div>
+          <button mat-flat-button color="primary" (click)="creerUtilisateur()">
+            <mat-icon>person_add</mat-icon>
+            Nouvel utilisateur
+          </button>
+        </div>
+
+        @if (chargementUtilisateurs()) {
+        <div class="loading-block">
+          <mat-icon>hourglass_top</mat-icon>
+          Chargement des utilisateurs…
+        </div>
+        } @else {
+        <div class="table-wrapper">
+          <table class="cbc-table">
+            <thead>
+              <tr>
+                <th>Matricule</th>
+                <th>Nom complet</th>
+                <th>E-mail</th>
+                <th>Téléphone</th>
+                <th>Rôles</th>
+                <th>Comptoir</th>
+                <th>Statut</th>
+                <th>Dernière connexion</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (utilisateur of utilisateurs(); track utilisateur.id) {
+              <tr>
+                <td class="cell-title">{{ utilisateur.matricule }}</td>
+                <td>{{ utilisateur.nomComplet }}</td>
+                <td>{{ utilisateur.email }}</td>
+                <td>{{ utilisateur.telephone }}</td>
+                <td>
+                  <div class="role-list">
+                    @for (role of utilisateur.roles; track role) {
+                    <span class="status-chip neutre">{{ libelleRole(role) }}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  @if (utilisateur.comptoirCode) {
+                  <span class="cell-title">{{ utilisateur.comptoirCode }}</span>
+                  <span class="cell-sub">{{ utilisateur.comptoirNom }}</span>
+                  } @else {
+                  <span class="cell-sub">Global</span>
+                  }
+                </td>
+                <td>
+                  <span class="status-chip" [ngClass]="utilisateur.actif ? 'succes' : 'neutre'">
+                    {{ utilisateur.actif ? 'Actif' : 'Inactif' }}
+                  </span>
+                  @if (utilisateur.compteBloque) {
+                  <span class="cell-sub">Bloqué</span>
+                  }
+                </td>
+                <td>{{ formaterDate(utilisateur.dateDerniereConnexion) }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button mat-icon-button aria-label="Modifier l'utilisateur"
+                      (click)="modifierUtilisateur(utilisateur)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-stroked-button (click)="basculerUtilisateur(utilisateur)">
+                      {{ utilisateur.actif ? 'Désactiver' : 'Activer' }}
+                    </button>
+                    <button mat-icon-button color="warn" aria-label="Supprimer l'utilisateur"
+                      (click)="supprimerUtilisateur(utilisateur)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="9" class="empty-cell">Aucun utilisateur enregistré.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
+      </div>
+    </mat-tab>
+    }
+  </mat-tab-group>
+  }
+</div>

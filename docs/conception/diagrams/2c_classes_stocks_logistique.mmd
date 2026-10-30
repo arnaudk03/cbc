@@ -1,0 +1,78 @@
+classDiagram
+    direction TB
+
+    %% MODULE TRANSFERT & LOGISTIQUE (Conforme Outil BEBC)
+    class Comptoir {
+        +Long id
+        +String code
+        +String nom
+        +String type
+    }
+
+    class BordereauEnlevement_BEBC {
+        +Long id
+        +String numeroBEBC
+        +String direction
+        +String localite
+        +String magasinDepart
+        +String beneficiaire
+        +String objetEnlevement
+        +String colisage
+        +Integer nombreSacs
+        +Double tonnageEnleveKg
+        +String nomTransporteur
+        +String numeroVehicule
+        +String signatureTransporteurToken
+        +String statut
+    }
+
+    class MagasinCentral {
+        +Long id
+        +String codeMagasin
+        +String nom
+        +String ville
+        +Double capaciteTotaleTonnes
+        +Double stockActuelTonnes
+    }
+
+    class BordereauReceptionMagasin {
+        +Long id
+        +String numeroReception
+        +LocalDateTime dateDechargement
+        +Integer nombreSacsRecus
+        +Double tonnageDechargeKg
+        +Double ecartPoidsKg
+        +String statutConformite
+    }
+
+    %% MODULE GESTION DES STOCKS & EMBALLAGES (Conforme FSJ & Feuil2)
+    class FicheStockJournaliere_FSJ {
+        +Long id
+        +LocalDate date
+        +String natureOperation
+        +Integer entreeSacs
+        +Double entreePoidsKg
+        +Double entreeValeurCFA
+        +Integer sortieSacs
+        +Double sortiePoidsKg
+        +Double sortieValeurCFA
+        +Integer stockFinalSacs
+        +Double stockFinalPoidsKg
+        +Double stockFinalValeurCFA
+    }
+
+    class FicheStockMateriel_Emballages {
+        +Long id
+        +String designationMateriel
+        +String referenceDoc
+        +Integer entreesEmballages
+        +Integer sortiesEmballages
+        +Integer stockEmballages
+    }
+
+    %% RELATIONS TRANSFERT VERS MAGASIN
+    Comptoir "1" *-- "*" BordereauEnlevement_BEBC : depart_de
+    Comptoir "1" *-- "*" FicheStockJournaliere_FSJ : tenue_quotidienne
+    Comptoir "1" *-- "*" FicheStockMateriel_Emballages : suivi_kits
+    BordereauEnlevement_BEBC "1" -- "0..1" BordereauReceptionMagasin : transfere_vers
+    MagasinCentral "1" *-- "*" BordereauReceptionMagasin : recoit_dans

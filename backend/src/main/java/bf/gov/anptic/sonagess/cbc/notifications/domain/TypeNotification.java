@@ -1,0 +1,13 @@
+package bf.gov.anptic.sonagess.cbc.notifications.domain;
+
+public enum TypeNotification {
+    CONFIRMATION_BRBC,
+    PAIEMENT_MOBILE_RECU,
+    REJET_DOSSIER_COLLECTE,
+    ALERTE_SEUIL_STOCK,
+    ALERTE_ECART_TRANSFERT,
+    CHALLENGE_OTP_2FA,
+    VALIDATION_DCT,
+    DEMANDE_VALIDATION_PAIEMENT,
+    RECEPTION_MAGASIN
+}

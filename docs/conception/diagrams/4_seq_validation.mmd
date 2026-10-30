@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor SCP as Chef SCP
+    actor DCT as Directeur DCT (Collecte & Transf.)
+    participant Front as Web Angular
+    participant API as Backend Spring Boot
+    participant DB as PostgreSQL
+
+    SCP->>Front: Ouvre les dossiers de collecte synchronisés
+    Front->>API: GET /api/v1/collectes?statut=SYNCHRONISEE
+    API-->>Front: Fiches qualité, pesées, BRBC, photos
+    alt Dossier conforme
+        SCP->>Front: Valider l'examen
+        Front->>API: PUT /api/v1/collectes/{id}/examiner
+        API->>DB: Statut -> EXAMINEE_SCP
+        DCT->>Front: Validation finale DCT
+        Front->>API: POST /api/v1/collectes/valider-lot
+        API->>DB: Statut -> VALIDEE_DCT
+        DCT->>Front: Générer bordereau de transmission DFC
+        Front->>API: POST /api/v1/etats-paiement/generer
+        API-->>Front: Bordereau officiel généré
+    else Anomalie constatée
+        SCP->>Front: Rejeter avec motif explicite
+        Front->>API: PUT /api/v1/collectes/{id}/rejet
+        API->>DB: Statut -> REJETEE_SCP (Alerte sur tablette)
+    end

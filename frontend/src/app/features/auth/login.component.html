@@ -1,0 +1,158 @@
+<div class="login-page">
+  <section class="login-hero">
+    <div class="hero-brand">
+      <div class="hero-logo-surface">
+        <img src="assets/sonagess-logo.jpg" alt="Logo SONAGESS" />
+      </div>
+      <div>
+        <span class="hero-eyebrow">Plateforme nationale</span>
+        <h1>Collecte Bord Champ</h1>
+      </div>
+    </div>
+
+    <p class="hero-description">
+      Plateforme nationale de collecte, de contrôle qualité, de paiement mobile money
+      et de gestion des stocks de sécurité alimentaire.
+    </p>
+
+    <div class="hero-features">
+      <div class="hero-feature">
+        <mat-icon>verified_user</mat-icon>
+        <div>
+          <strong>Traçabilité certifiée</strong>
+          <span>BRBC, FP et FSJ numériques</span>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <mat-icon>payments</mat-icon>
+        <div>
+          <strong>Paiements sécurisés</strong>
+          <span>Double validation 2FA et Mobile Money</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-footer">
+      <span>BURKINA FASO</span>
+      <small>La Patrie ou La Mort, Nous Vaincrons</small>
+    </div>
+  </section>
+
+  <section class="login-panel">
+    <mat-card class="login-card">
+      <div class="login-card-header">
+        <div class="login-icon">
+          <mat-icon>{{ etape() === 'OTP' ? 'sms' : 'lock' }}</mat-icon>
+        </div>
+        <div>
+          <h2>{{ etape() === 'OTP' ? 'Validation à second facteur' : 'Connexion sécurisée' }}</h2>
+          <p>
+            @if (etape() === 'OTP') {
+            Saisissez le code à 6 chiffres envoyé par SMS.
+            } @else {
+            Accédez à votre espace métier avec vos identifiants SONAGESS.
+            }
+          </p>
+        </div>
+      </div>
+
+      @if (erreur(); as message) {
+      <div class="login-error" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ message }}</span>
+      </div>
+      }
+
+      @if (etape() === 'IDENTIFIANTS') {
+      <form [formGroup]="form" (ngSubmit)="soumettreIdentifiants()" class="login-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Matricule ou adresse e-mail</mat-label>
+          <mat-icon matPrefix>person</mat-icon>
+          <input matInput formControlName="identifiant" autocomplete="username"
+            [placeholder]="modeDemo ? 'admin@sonagess.bf' : 'Votre matricule ou e-mail'" />
+          @if (identifiant.hasError('required')) {
+          <mat-error>L'identifiant est obligatoire.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mot de passe</mat-label>
+          <mat-icon matPrefix>key</mat-icon>
+          <input matInput type="password" formControlName="motDePasse" autocomplete="current-password" />
+          @if (motDePasse.hasError('required')) {
+          <mat-error>Le mot de passe est obligatoire.</mat-error>
+          }
+          @if (motDePasse.hasError('minlength')) {
+          <mat-error>Le mot de passe doit contenir au moins 6 caractères.</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="login-submit" type="submit" [disabled]="chargement()">
+          @if (chargement()) {
+          <span class="login-submit-content">
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Connexion en cours…</span>
+          </span>
+          } @else {
+          <span class="login-submit-content">
+            <mat-icon>login</mat-icon>
+            <span>Se connecter</span>
+          </span>
+          }
+        </button>
+
+      </form>
+      } @else {
+      <form [formGroup]="otpForm" (ngSubmit)="verifierOtp()" class="login-form">
+        <div class="otp-illustration">
+          <mat-icon>smartphone</mat-icon>
+          <span>Un code temporaire a été envoyé au numéro associé à votre compte.</span>
+        </div>
+
+        @if (modeDemo && otpDemo(); as code) {
+        <div class="demo-otp">
+          <mat-icon>science</mat-icon>
+          <span>Mode démonstration : code <strong>{{ code }}</strong></span>
+        </div>
+        }
+
+        <mat-form-field appearance="outline">
+          <mat-label>Code de validation</mat-label>
+          <mat-icon matPrefix>pin</mat-icon>
+          <input matInput formControlName="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+            placeholder="000000" />
+          @if (codeOtp.hasError('required')) {
+          <mat-error>Le code est obligatoire.</mat-error>
+          }
+          @if (codeOtp.hasError('pattern')) {
+          <mat-error>Le code doit contenir exactement 6 chiffres.</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="login-submit" type="submit" [disabled]="chargement()">
+          @if (chargement()) {
+          <span class="login-submit-content">
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Vérification…</span>
+          </span>
+          } @else {
+          <span class="login-submit-content">
+            <mat-icon>verified</mat-icon>
+            <span>Valider le code</span>
+          </span>
+          }
+        </button>
+
+        <button mat-button type="button" class="login-back" (click)="revenirAuxIdentifiants()">
+          <mat-icon>arrow_back</mat-icon>
+          Revenir aux identifiants
+        </button>
+      </form>
+      }
+    </mat-card>
+
+    <p class="login-copyright">
+      Portail Métier Sécurisé SONAGESS · © {{ annee }}
+    </p>
+  </section>
+</div>

@@ -15,14 +15,6 @@
       </span>
     </a>
 
-    <nav class="toolbar-nav">
-      @for (menu of menusVisibles(); track menu.route) {
-      <a mat-button [routerLink]="menu.route" routerLinkActive="active-nav">
-        <mat-icon>{{ menu.icon }}</mat-icon> <span>{{ menu.label }}</span>
-      </a>
-      }
-    </nav>
-
     <span class="spacer"></span>
 
     <div class="toolbar-actions">
@@ -33,23 +25,6 @@
         <span class="quick-cmd-label">Rechercher…</span>
         <kbd class="quick-cmd-kbd">Ctrl+K</kbd>
       </button>
-
-      <button mat-icon-button class="mobile-nav-trigger" matTooltip="Navigation" [matMenuTriggerFor]="menuMobile">
-        <mat-icon>menu</mat-icon>
-      </button>
-
-      <mat-menu #menuMobile="matMenu">
-        @for (menu of menusVisibles(); track menu.route) {
-        <button mat-menu-item [routerLink]="menu.route">
-          <mat-icon>{{ menu.icon }}</mat-icon>
-          <span>{{ menu.label }}</span>
-        </button>
-        }
-        <button mat-menu-item routerLink="/notifications">
-          <mat-icon>notifications</mat-icon>
-          <span>Notifications</span>
-        </button>
-      </mat-menu>
 
       <button mat-icon-button class="notif-btn" routerLink="/notifications" [matBadge]="notificationsNonLues()"
         [matBadgeHidden]="notificationsNonLues() === 0" matBadgeColor="warn"
@@ -65,13 +40,8 @@
 
       @if (auth.user(); as utilisateur) {
       <button class="user-pill" mat-button [matMenuTriggerFor]="menuCompte">
-        <!-- <div class="user-avatar">{{ auth.initiales() }}</div> -->
         <mat-icon class="user-avatar">account_circle</mat-icon>
         <span class="user-role">{{ auth.roleLabel() }}</span>
-        <!-- <div class="user-info">
-          <span class="user-name">{{ utilisateur.prenom }} {{ utilisateur.nom }}</span>
-          <span class="user-role">{{ auth.roleLabel() }}</span>
-        </div> -->
         <mat-icon class="user-chevron">expand_more</mat-icon>
       </button>
 
@@ -142,9 +112,33 @@
 </header>
 }
 
-<main class="app-main-content" [class.connexion-layout]="!afficherCoquille()">
-  <router-outlet></router-outlet>
-</main>
+<div class="app-workspace-layout" [class.connexion-layout]="!afficherCoquille()">
+  @if (afficherCoquille()) {
+  <nav class="app-sidebar" aria-label="Navigation principale">
+    <div class="sidebar-section-title">Navigation Métier</div>
+    <div class="sidebar-nav-list">
+      @for (menu of menusVisibles(); track menu.route) {
+      <a [routerLink]="menu.route" routerLinkActive="active-sidebar-nav" class="sidebar-nav-item">
+        <mat-icon>{{ menu.icon }}</mat-icon>
+        <span>{{ menu.label }}</span>
+      </a>
+      }
+    </div>
+
+    <div class="sidebar-footer-widget">
+      <div class="sidebar-widget-title">Raccourci</div>
+      <button type="button" class="sidebar-pesee-btn" routerLink="/collectes">
+        <mat-icon>add_circle_outline</mat-icon>
+        <span>Nouvelle Pesée (N)</span>
+      </button>
+    </div>
+  </nav>
+  }
+
+  <main class="app-main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
 
 <!-- Palette de commande universelle (Ctrl+K) -->
 @if (paletteOuverte()) {

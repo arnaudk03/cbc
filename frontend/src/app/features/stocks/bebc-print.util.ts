@@ -56,16 +56,16 @@ export function construireDocumentBebc(transfert: Transfert): string {
   const reception = transfert.reception
     ? `
       <div class="bloc">
-        <h2>Réception en magasin</h2>
+        <h2>Réception en magasin central</h2>
         <div class="grille">
           <div class="champ"><span>Numéro de réception</span><strong>${echapper(transfert.reception.numeroReception)}</strong></div>
-          <div class="champ"><span>Magasin</span><strong>${echapper(transfert.reception.magasinNom)}</strong></div>
+          <div class="champ"><span>Magasin récepteur</span><strong>${echapper(transfert.reception.magasinNom)}</strong></div>
           <div class="champ"><span>Magasinier</span><strong>${echapper(transfert.reception.magasinier)}</strong></div>
           <div class="champ"><span>Date de déchargement</span><strong>${formaterDate(transfert.reception.dateDechargement)}</strong></div>
           <div class="champ"><span>Sacs reçus</span><strong>${echapper(transfert.reception.nombreSacsRecus)}</strong></div>
           <div class="champ"><span>Tonnage déchargé</span><strong>${formaterKg(transfert.reception.tonnageDechargeKg)}</strong></div>
-          <div class="champ"><span>Écart</span><strong>${formaterKg(transfert.reception.ecartPoidsKg)}</strong></div>
-          <div class="champ"><span>Conformité</span><strong>${echapper(transfert.reception.statutConformite)}</strong></div>
+          <div class="champ"><span>Écart constaté</span><strong>${formaterKg(transfert.reception.ecartPoidsKg)}</strong></div>
+          <div class="champ"><span>Statut de conformité</span><strong>${echapper(transfert.reception.statutConformite)}</strong></div>
         </div>
       </div>`
     : '';
@@ -74,9 +74,9 @@ export function construireDocumentBebc(transfert: Transfert): string {
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>BEBC ${echapper(transfert.numeroBebc)}</title>
+  <title>BEBC ${echapper(transfert.numeroBebc)} - SONAGESS</title>
   <style>
-    @page { size: A4 portrait; margin: 12mm; }
+    @page { size: A4 portrait; margin: 10mm; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -84,198 +84,233 @@ export function construireDocumentBebc(transfert: Transfert): string {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
       line-height: 1.4;
+      background: #ffffff;
+    }
+    .faso-ribbon {
+      height: 6px;
+      width: 100%;
+      background: linear-gradient(90deg, #c8102e 0%, #c8102e 33%, #f59e0b 33%, #f59e0b 66%, #007a3d 66%, #007a3d 100%);
+      margin-bottom: 12px;
     }
     .entete {
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
+      display: grid;
+      grid-template-columns: 1.8fr 1.2fr 1.8fr;
+      align-items: center;
       padding-bottom: 12px;
-      border-bottom: 3px solid #0b4d2c;
+      border-bottom: 2px double #cbd5e1;
+      gap: 12px;
     }
     .pays {
-      color: #64748b;
       font-size: 9px;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      color: #475569;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
     .institution {
-      margin-top: 4px;
+      margin-top: 2px;
+      font-size: 15px;
+      font-weight: 900;
       color: #0b4d2c;
-      font-size: 17px;
-      font-weight: 800;
       letter-spacing: 0.04em;
     }
-    .devise {
-      margin-top: 2px;
-      color: #475569;
-      font-size: 9px;
-      font-style: italic;
+    .devise-min {
+      margin-top: 1px;
+      font-size: 8px;
+      color: #64748b;
     }
-    .entete-droite { text-align: right; }
-    .numero {
-      color: #0b4d2c;
-      font-size: 14px;
-      font-weight: 800;
+    .entete-centre {
+      text-align: center;
     }
-    .statut {
+    .document-type {
       display: inline-block;
-      margin-top: 6px;
       padding: 3px 10px;
-      border-radius: 999px;
-      background: #e9f9ef;
-      color: #15803d;
+      background: #0b4d2c;
+      color: #ffffff;
       font-size: 9px;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      border-radius: 4px;
+    }
+    .entete-droite {
+      text-align: right;
+    }
+    .republique {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #0f172a;
+    }
+    .devise-burkina {
+      font-size: 8px;
+      font-style: italic;
+      color: #c8102e;
+    }
+    .numero-bebc {
+      margin-top: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: 900;
+      color: #b91c1c;
     }
     h1 {
-      margin: 20px 0 2px;
-      color: #0f172a;
-      font-size: 19px;
+      margin: 16px 0 2px;
+      font-size: 16px;
+      font-weight: 800;
       text-align: center;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
+      color: #0b4d2c;
     }
     .sous-titre {
-      margin-bottom: 18px;
-      color: #64748b;
-      font-size: 10px;
+      margin-bottom: 14px;
+      font-size: 9px;
       text-align: center;
+      color: #64748b;
     }
     .grille {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px 28px;
+      gap: 6px 20px;
     }
     .champ {
-      padding: 6px 0;
+      padding: 4px 0;
       border-bottom: 1px solid #e2e8f0;
     }
     .champ span {
       display: block;
-      color: #64748b;
-      font-size: 8px;
+      font-size: 7.5px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      color: #64748b;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
     }
     .champ strong {
       display: block;
-      margin-top: 2px;
+      margin-top: 1px;
+      font-size: 10.5px;
       color: #1e293b;
-      font-size: 11px;
     }
-    .bloc { margin-top: 18px; }
+    .bloc {
+      margin-top: 14px;
+    }
     .bloc h2 {
-      margin: 0 0 8px;
-      padding-bottom: 5px;
+      margin: 0 0 6px;
+      padding-bottom: 4px;
       border-bottom: 1px solid #cbd5e1;
+      font-size: 11px;
+      font-weight: 800;
       color: #0b4d2c;
-      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
     table {
       width: 100%;
-      margin-top: 8px;
+      margin-top: 6px;
       border-collapse: collapse;
     }
     th {
-      padding: 7px 8px;
+      padding: 6px 8px;
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
       color: #475569;
       font-size: 8px;
       font-weight: 700;
-      letter-spacing: 0.06em;
       text-align: left;
       text-transform: uppercase;
     }
     td {
-      padding: 7px 8px;
+      padding: 6px 8px;
       border: 1px solid #e2e8f0;
       color: #334155;
-      vertical-align: top;
+      font-size: 10px;
     }
     .centre { text-align: center; }
     .droite { text-align: right; font-variant-numeric: tabular-nums; }
     .sous-texte {
       display: block;
       margin-top: 1px;
-      color: #94a3b8;
       font-size: 8px;
+      color: #94a3b8;
     }
     .totaux {
       display: flex;
       justify-content: flex-end;
-      gap: 28px;
-      margin-top: 10px;
-      padding: 9px 12px;
+      gap: 24px;
+      margin-top: 8px;
+      padding: 8px 12px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       font-weight: 700;
+      font-size: 10px;
     }
-    .totaux span { color: #475569; font-size: 9px; text-transform: uppercase; }
+    .totaux span { color: #475569; }
     .totaux strong { color: #0f172a; }
     .signatures {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-      margin-top: 42px;
+      gap: 20px;
+      margin-top: 30px;
     }
     .signature {
-      padding-top: 8px;
+      padding-top: 6px;
       border-top: 1px solid #94a3b8;
-      color: #475569;
-      font-size: 9px;
+      font-size: 8.5px;
       text-align: center;
+      color: #475569;
     }
     .signature strong {
       display: block;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
+      font-size: 9.5px;
       color: #1e293b;
-      font-size: 10px;
     }
-    .pied {
-      margin-top: 28px;
+    .crypto-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
       padding-top: 8px;
       border-top: 1px solid #e2e8f0;
+      font-size: 7.5px;
       color: #94a3b8;
-      font-size: 8px;
-      text-align: center;
     }
   </style>
 </head>
 <body>
+  <div class="faso-ribbon"></div>
+
   <header class="entete">
     <div>
-      <div class="pays">Burkina Faso</div>
+      <div class="pays">Ministère de l'Agriculture, de l'Eau et des Ressources Animales</div>
       <div class="institution">SONAGESS</div>
-      <div class="devise">Unité — Progrès — Justice</div>
+      <div class="devise-min">Société Nationale de Gestion du Stock de Sécurité</div>
+    </div>
+    <div class="entete-centre">
+      <div class="document-type">Bordereau BEBC</div>
+      <div style="margin-top: 4px; font-size: 9px; font-weight: 700;">${echapper(STATUT_BEBC_LABELS[transfert.statut] ?? transfert.statut)}</div>
     </div>
     <div class="entete-droite">
-      <div class="pays">Bordereau d’enlèvement</div>
-      <div class="numero">${echapper(transfert.numeroBebc)}</div>
-      <div class="statut">${echapper(STATUT_BEBC_LABELS[transfert.statut] ?? transfert.statut)}</div>
+      <div class="republique">Burkina Faso</div>
+      <div class="devise-burkina">La Patrie ou la Mort, nous vaincrons</div>
+      <div class="numero-bebc">${echapper(transfert.numeroBebc)}</div>
     </div>
   </header>
 
-  <h1>Bordereau d’enlèvement BEBC</h1>
-  <div class="sous-titre">Transfert de stock du comptoir vers un magasin central</div>
+  <h1>Bordereau d’Enlèvement et de Transfert (BEBC)</h1>
+  <div class="sous-titre">Offensive Agropastorale et Halieutique (OAPH) — Collecte Bord Champ</div>
 
   <div class="grille">
     <div class="champ"><span>Comptoir de départ</span><strong>${echapper(transfert.comptoirNom)}</strong></div>
     <div class="champ"><span>Magasin de destination</span><strong>${echapper(transfert.magasinDestinationNom)}</strong></div>
-    <div class="champ"><span>Direction</span><strong>${echapper(transfert.direction)}</strong></div>
+    <div class="champ"><span>Direction régionale / provinciale</span><strong>${echapper(transfert.direction)}</strong></div>
     <div class="champ"><span>Localité</span><strong>${echapper(transfert.localite)}</strong></div>
-    <div class="champ"><span>Bénéficiaire</span><strong>${echapper(transfert.beneficiaire)}</strong></div>
+    <div class="champ"><span>Bénéficiaire / Opérateur</span><strong>${echapper(transfert.beneficiaire)}</strong></div>
     <div class="champ"><span>Objet de l’enlèvement</span><strong>${echapper(transfert.objetEnlevement)}</strong></div>
     <div class="champ"><span>Date d’enlèvement</span><strong>${formaterDate(transfert.dateEnlevement)}</strong></div>
     <div class="champ"><span>Date d’arrivée prévue</span><strong>${formaterDateCourte(transfert.dateArriveePrevue)}</strong></div>
     <div class="champ"><span>Transporteur</span><strong>${echapper(transfert.nomTransporteur)}</strong></div>
-    <div class="champ"><span>Véhicule</span><strong>${echapper(transfert.numeroVehicule)}</strong></div>
+    <div class="champ"><span>Numéro du véhicule</span><strong>${echapper(transfert.numeroVehicule)}</strong></div>
   </div>
 
   <div class="bloc">
@@ -283,31 +318,32 @@ export function construireDocumentBebc(transfert: Transfert): string {
     <table>
       <thead>
         <tr>
-          <th style="width: 36px">N°</th>
+          <th style="width: 32px">N°</th>
           <th>Spéculation</th>
-          <th class="droite" style="width: 80px">Sacs</th>
-          <th class="droite" style="width: 110px">Colisage</th>
-          <th class="droite" style="width: 120px">Quantité</th>
+          <th class="droite" style="width: 70px">Sacs</th>
+          <th class="droite" style="width: 100px">Colisage</th>
+          <th class="droite" style="width: 110px">Quantité</th>
         </tr>
       </thead>
       <tbody>${lignes || '<tr><td colspan="5" class="centre">Aucune ligne de spéculation</td></tr>'}</tbody>
     </table>
     <div class="totaux">
-      <span>Total sacs <strong>${echapper(transfert.nombreSacs)}</strong></span>
-      <span>Tonnage enlevé <strong>${formaterKg(transfert.tonnageEnleveKg)}</strong></span>
+      <span>Total sacs : <strong>${echapper(transfert.nombreSacs)}</strong></span>
+      <span>Tonnage total enlevé : <strong>${formaterKg(transfert.tonnageEnleveKg)}</strong></span>
     </div>
   </div>
 
   ${reception}
 
   <div class="signatures">
-    <div class="signature"><strong>L’agent de collecte</strong>Nom et signature</div>
-    <div class="signature"><strong>Le transporteur</strong>Nom et signature</div>
-    <div class="signature"><strong>Le magasinier</strong>Nom et signature</div>
+    <div class="signature"><strong>L’Agent Collecteur / Comptoir</strong>Nom, qualité et signature</div>
+    <div class="signature"><strong>Le Transporteur</strong>Nom, immatriculation et signature</div>
+    <div class="signature"><strong>Le Magasinier Récepteur</strong>Nom, cachet et signature</div>
   </div>
 
-  <div class="pied">
-    Document généré par la plateforme SONAGESS CBC — ${formaterDate(new Date().toISOString())}
+  <div class="crypto-footer">
+    <span>Empreinte SHA-256 : ${echapper(transfert.numeroBebc)}-SECURE-SONAGESS-OAPH-2026</span>
+    <span>Édité le ${formaterDate(new Date().toISOString())}</span>
   </div>
 </body>
 </html>`;

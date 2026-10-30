@@ -98,7 +98,9 @@ export class StockComponent implements OnInit {
   readonly paginator = viewChild(MatPaginator);
   readonly sort = viewChild(MatSort);
   readonly formulaireBebc = viewChild.required<TemplateRef<unknown>>('formulaireBebc');
+  readonly formulaireReception = viewChild.required<TemplateRef<unknown>>('formulaireReception');
   private bebcDialogRef: MatDialogRef<unknown> | null = null;
+  private receptionDialogRef: MatDialogRef<unknown> | null = null;
 
   readonly chargement = signal(true);
   readonly erreur = signal<string | null>(null);
@@ -119,9 +121,16 @@ export class StockComponent implements OnInit {
     'actions'
   ];
   readonly transfertEnReception = signal<Transfert | null>(null);
-  readonly receptionSacs = signal(0);
-  readonly receptionTonnage = signal(0);
+  readonly receptionLignes = signal<{ speculationId: number; speculationNom: string; nombreSacsRecus: number; colisageKg: number }[]>([]);
   readonly receptionMagasin = signal<number | null>(null);
+
+  readonly receptionSacsTotaux = computed(() =>
+    this.receptionLignes().reduce((acc, l) => acc + (Number(l.nombreSacsRecus) || 0), 0)
+  );
+
+  readonly receptionTonnageTotal = computed(() =>
+    this.receptionLignes().reduce((acc, l) => acc + (Number(l.nombreSacsRecus) || 0) * (Number(l.colisageKg) || 0), 0)
+  );
   readonly enregistrementFsj = signal(false);
   readonly enregistrementTransfert = signal(false);
   readonly receptionEnCours = signal(false);
@@ -192,7 +201,7 @@ export class StockComponent implements OnInit {
     nomTransporteur: ['', Validators.required],
     numeroVehicule: ['', Validators.required],
     dateArriveePrevue: [''],
-    direction: ['DGTD'],
+    direction: ['SGS'],
     localite: [''],
     beneficiaire: [''],
     objetEnlevement: ['Transfert de stock vers magasin central'],
@@ -520,11 +529,24 @@ export class StockComponent implements OnInit {
 
   ouvrirReception(transfert: Transfert): void {
     this.transfertEnReception.set(transfert);
-    this.receptionSacs.set(transfert.nombreSacs);
-    this.receptionTonnage.set(transfert.tonnageEnleveKg);
     this.receptionMagasin.set(
       transfert.magasinDestinationId ?? this.magasins()[0]?.id ?? null
     );
+    this.receptionLignes.set(
+      transfert.lignes.map(l => ({
+        speculationId: l.speculationId,
+        speculationNom: l.speculationNom,
+        nombreSacsRecus: l.nombreSacs,
+        colisageKg: l.colisageKg
+      }))
+    );
+    this.receptionDialogRef = this.dialog.open(this.formulaireReception(), {
+      width: '1040px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      autoFocus: false,
+      panelClass: 'bebc-create-dialog'
+    });
   }
 
   confirmerReception(): void {
@@ -538,13 +560,13 @@ export class StockComponent implements OnInit {
     this.stockService
       .receptionner(transfert.id, {
         magasinCentralId: magasinId,
-        nombreSacsRecus: this.receptionSacs(),
-        tonnageDechargeKg: this.receptionTonnage()
+        nombreSacsRecus: this.receptionSacsTotaux(),
+        tonnageDechargeKg: this.receptionTonnageTotal()
       })
       .subscribe({
         next: (resultat) => {
           this.receptionEnCours.set(false);
-          this.transfertEnReception.set(null);
+          this.fermerFormulaireReception();
           const ecart = resultat.reception?.ecartPoidsKg ?? 0;
           this.notifier(
             `Réception enregistrée (${resultat.reception?.statutConformite}). Écart : ${ecart} kg.`
@@ -560,6 +582,12 @@ export class StockComponent implements OnInit {
   }
 
   annulerReception(): void {
+    this.fermerFormulaireReception();
+  }
+
+  fermerFormulaireReception(): void {
+    this.receptionDialogRef?.close();
+    this.receptionDialogRef = null;
     this.transfertEnReception.set(null);
   }
 

@@ -64,6 +64,9 @@ public class BordereauReceptionBrbc {
     @Builder.Default
     private ModePaiement modePaiement = ModePaiement.MOBILE_MONEY;
 
+    @Column(name = "client_sync_id", length = 100)
+    private String clientSyncId;
+
     @Column(name = "observations_receptionnaire", columnDefinition = "TEXT")
     private String observationsReceptionnaire;
 

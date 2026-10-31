@@ -13,6 +13,8 @@ public interface BordereauReceptionBrbcRepository extends JpaRepository<Borderea
 
     Optional<BordereauReceptionBrbc> findByNumeroBrbc(String numeroBrbc);
 
+    Optional<BordereauReceptionBrbc> findByClientSyncId(String clientSyncId);
+
     List<BordereauReceptionBrbc> findByStatutValidationOrderByDateEmissionDesc(StatutValidationBrbc statut);
 
     long countByStatutValidation(StatutValidationBrbc statut);

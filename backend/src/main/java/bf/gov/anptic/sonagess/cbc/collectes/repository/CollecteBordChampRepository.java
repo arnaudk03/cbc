@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -116,4 +117,32 @@ public interface CollecteBordChampRepository extends JpaRepository<CollecteBordC
                                       @Param("statutRejete") CollecteStatut statutRejete);
 
     List<CollecteBordChamp> findTop10ByOrderByDateHeureCollecteDesc();
+
+    @EntityGraph(attributePaths = {
+            "campagne", "comptoir", "producteur", "speculation", "controleQualite", "fichePesee", "bordereauReception"
+    })
+    @Query("""
+            select c from CollecteBordChamp c
+            where c.agent.id = :agentId
+              and (:dateDebut is null or c.dateHeureCollecte >= :dateDebut)
+              and (:dateFin is null or c.dateHeureCollecte <= :dateFin)
+              and (:statut is null or c.statut = :statut)
+            order by c.dateHeureCollecte desc
+            """)
+    Page<CollecteBordChamp> searchAgentCollectes(@Param("agentId") Long agentId,
+                                                @Param("dateDebut") LocalDateTime dateDebut,
+                                                @Param("dateFin") LocalDateTime dateFin,
+                                                @Param("statut") CollecteStatut statut,
+                                                Pageable pageable);
+
+    @Query("""
+            select c from CollecteBordChamp c
+            where (c.agent.id = :agentId or (:comptoirId is not null and c.comptoir.id = :comptoirId))
+              and c.dateHeureCollecte >= :debutJournee
+              and c.dateHeureCollecte <= :finJournee
+            """)
+    List<CollecteBordChamp> findCollectesJournee(@Param("agentId") Long agentId,
+                                                @Param("comptoirId") Long comptoirId,
+                                                @Param("debutJournee") LocalDateTime debutJournee,
+                                                @Param("finJournee") LocalDateTime finJournee);
 }

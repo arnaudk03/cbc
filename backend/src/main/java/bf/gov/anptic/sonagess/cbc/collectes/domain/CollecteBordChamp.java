@@ -80,6 +80,9 @@ public class CollecteBordChamp {
     @Builder.Default
     private CollecteStatut statut = CollecteStatut.SYNCHRONISEE;
 
+    @Column(name = "client_ligne_id", length = 100)
+    private String clientLigneId;
+
     @Column(name = "latitude_gps")
     private Double latitudeGps;
 

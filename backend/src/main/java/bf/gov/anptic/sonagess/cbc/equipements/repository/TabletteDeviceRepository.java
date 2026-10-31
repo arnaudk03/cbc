@@ -9,6 +9,8 @@ public interface TabletteDeviceRepository extends JpaRepository<TabletteDevice, 
 
     Optional<TabletteDevice> findByEquipementId(Long equipementId);
 
+    Optional<TabletteDevice> findByImei(String imei);
+
     boolean existsByImeiIgnoreCase(String imei);
 
     boolean existsByImeiIgnoreCaseAndIdNot(String imei, Long id);

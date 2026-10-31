@@ -44,6 +44,7 @@ import {
 import { StockService } from './stock.service';
 import { BebcDetailDialogComponent } from './bebc-detail-dialog.component';
 import { BebcPreviewDialogComponent } from './bebc-preview-dialog.component';
+import { EmballagesStockComponent } from './emballages-stock.component';
 
 class PaginatorFr extends MatPaginatorIntl {
   override itemsPerPageLabel = 'Éléments par page';
@@ -81,7 +82,8 @@ class PaginatorFr extends MatPaginatorIntl {
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDialogModule
+    MatDialogModule,
+    EmballagesStockComponent
   ],
   templateUrl: './stock.component.html',
   styleUrl: './stock.component.scss',
@@ -107,6 +109,9 @@ export class StockComponent implements OnInit {
   readonly comptoirs = signal<Comptoir[]>([]);
   readonly magasins = signal<Magasin[]>([]);
   readonly comptoirSelectionne = signal<number | null>(null);
+  readonly comptoirCourant = computed(
+    () => this.comptoirs().find((comptoir) => comptoir.id === this.comptoirSelectionne()) ?? null
+  );
   readonly stock = signal<StockDisponible | null>(null);
   readonly fiches = signal<FicheStock[]>([]);
   readonly transfertsDataSource = new MatTableDataSource<Transfert>([]);

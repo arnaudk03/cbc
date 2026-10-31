@@ -1,0 +1,128 @@
+.dialog-subtitle {
+  margin: 0 0 0.75rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.dialog-subtitle strong {
+  color: #0f172a;
+}
+
+.info-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+}
+
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.count-chip {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.count-chip.succes {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.search-field {
+  width: 100%;
+}
+
+.selection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cell-sub {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.utilisateurs-list {
+  max-height: 340px;
+  margin-top: 0.35rem;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.utilisateur-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s ease;
+}
+
+.utilisateur-row:last-child {
+  border-bottom: none;
+}
+
+.utilisateur-row:hover {
+  background: #f8fafc;
+}
+
+.utilisateur-row.selected {
+  background: #eff6ff;
+}
+
+.utilisateur-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.utilisateur-nom {
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+}
+
+.role-chip {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.empty-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}

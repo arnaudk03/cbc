@@ -1,0 +1,85 @@
+<h2 mat-dialog-title>{{ data.fiche.numeroFiche }}</h2>
+<mat-dialog-content>
+  <div class="detail-header">
+    <div>
+      <span class="cell-sub">Comptoir</span>
+      <strong>{{ data.fiche.comptoirCode }} — {{ data.fiche.comptoirNom }}</strong>
+    </div>
+    <div>
+      <span class="cell-sub">Date</span>
+      <strong>{{ data.fiche.dateFiche }}</strong>
+    </div>
+    <div>
+      <span class="cell-sub">Statut</span>
+      <span class="status-chip" [ngClass]="data.fiche.statut === 'VALIDEE' ? 'succes' : 'alerte'">
+        {{ libelleStatut(data.fiche.statut) }}
+      </span>
+    </div>
+  </div>
+
+  @if (data.fiche.observations) {
+  <p class="observations">{{ data.fiche.observations }}</p>
+  }
+
+  <div class="detail-meta">
+    <span>Créée par {{ data.fiche.creePar ?? '—' }}</span>
+    @if (data.fiche.validePar) {
+    <span>Validée par {{ data.fiche.validePar }}</span>
+    }
+  </div>
+
+  <div class="table-wrapper">
+    <table class="cbc-table">
+      <thead>
+        <tr>
+          <th>Matériel</th>
+          <th class="align-right">Initial</th>
+          <th class="align-right">Entrées</th>
+          <th class="align-right">Sorties</th>
+          <th class="align-right">Théorique</th>
+          <th class="align-right">Physique</th>
+          <th class="align-right">Écart</th>
+          <th class="align-right">Stock final</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ligne of data.fiche.lignes; track ligne.id) {
+        <tr>
+          <td>
+            <span class="cell-title">{{ ligne.materielLibelle }}</span>
+            <span class="cell-sub">
+              {{ ligne.materielCode }} · {{ libelleCategorie(ligne.categorie) }} ·
+              {{ libelleUnite(ligne.unite) }}
+            </span>
+          </td>
+          <td class="align-right">{{ ligne.stockInitial }}</td>
+          <td class="align-right">{{ ligne.entrees }}</td>
+          <td class="align-right">{{ ligne.sorties }}</td>
+          <td class="align-right">{{ ligne.stockTheorique }}</td>
+          <td class="align-right">{{ ligne.stockPhysique ?? '—' }}</td>
+          <td class="align-right">
+            @if (ligne.ecart !== null) {
+            <span [class.ecart-negatif]="ligne.ecart < 0">{{ ligne.ecart }}</span>
+            } @else {
+            —
+            }
+          </td>
+          <td class="align-right">
+            <strong>{{ ligne.stockFinal }}</strong>
+            @if (ligne.alerte) {
+            <span class="status-chip danger">Seuil</span>
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="8" class="empty-cell">Aucune ligne sur cette fiche.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="fermer()">Fermer</button>
+</mat-dialog-actions>

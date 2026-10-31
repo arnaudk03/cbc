@@ -1,0 +1,70 @@
+.detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.detail-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.detail-header strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.cell-sub {
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.observations {
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.82rem;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.cell-title {
+  display: block;
+  color: #0f172a;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.ecart-negatif {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.empty-cell {
+  padding: 1.2rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.status-chip.danger {
+  margin-left: 0.35rem;
+}

@@ -1,0 +1,186 @@
+@if (comptoir(); as c) {
+  @if (chargement()) {
+    <div class="loading-state">
+      <mat-icon>hourglass_empty</mat-icon>
+      <span>Chargement des stocks d’emballage…</span>
+    </div>
+  } @else {
+    @if (erreur()) {
+      <div class="error-banner" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ erreur() }}</span>
+        <button mat-stroked-button type="button" (click)="charger(c)">Réessayer</button>
+      </div>
+    }
+
+    <div class="stock-metrics">
+      <mat-card class="panel-card metric-card">
+        <mat-icon class="metric-icon icon-blue">inventory_2</mat-icon>
+        <div>
+          <span>Matériels suivis</span>
+          <strong>{{ stock().length }}</strong>
+        </div>
+      </mat-card>
+      <mat-card class="panel-card metric-card">
+        <mat-icon class="metric-icon icon-red">warning_amber</mat-icon>
+        <div>
+          <span>Sous le seuil</span>
+          <strong>{{ nombreAlertes() }}</strong>
+        </div>
+      </mat-card>
+      <mat-card class="panel-card metric-card">
+        <mat-icon class="metric-icon icon-amber">assignment</mat-icon>
+        <div>
+          <span>Fiches en attente</span>
+          <strong>{{ fichesBrouillon() }}</strong>
+        </div>
+      </mat-card>
+    </div>
+
+    <mat-card class="panel-card">
+      <mat-card-content>
+        <div class="panel-title-row">
+          <div>
+            <h2>Stock courant — {{ c.code }}</h2>
+            <span class="cell-sub">
+              Dernier stock validé par matériel pour le comptoir {{ c.nom }}.
+            </span>
+          </div>
+          @if (peutGererMateriels()) {
+            <button mat-stroked-button type="button" (click)="creerMateriel()">
+              <mat-icon>add_box</mat-icon>
+              Nouveau matériel
+            </button>
+          }
+        </div>
+
+        @if (stock().length === 0) {
+          <div class="empty-state">
+            <mat-icon>inventory_2</mat-icon>
+            <strong>Aucun matériel d’emballage</strong>
+            <span>Créez un matériel pour commencer le suivi.</span>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="cbc-table">
+              <thead>
+                <tr>
+                  <th>Matériel</th>
+                  <th>Catégorie</th>
+                  <th class="align-right">Seuil</th>
+                  <th class="align-right">Stock final</th>
+                  <th>État</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (element of stock(); track element.materielId) {
+                  <tr>
+                    <td>
+                      <span class="cell-title">{{ element.libelle }}</span>
+                      <span class="cell-sub">{{ element.code }}</span>
+                    </td>
+                    <td>{{ libelleCategorie(element.categorie) }}</td>
+                    <td class="align-right">{{ element.seuilAlerte }}</td>
+                    <td class="align-right">
+                      <strong>{{ element.stockFinal | number: '1.0-0' }}</strong>
+                      <span class="cell-sub">{{ libelleUnite(element.unite) }}</span>
+                    </td>
+                    <td>
+                      @if (element.alerte) {
+                        <span class="status-chip danger">Sous le seuil</span>
+                      } @else {
+                        <span class="status-chip succes">Disponible</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="panel-card">
+      <mat-card-content>
+        <div class="panel-title-row">
+          <div>
+            <h2>Fiches de stock du matériel d’emballage</h2>
+            <span class="cell-sub">{{ fiches().length }} fiche(s) sur les 60 dernières.</span>
+          </div>
+          @if (peutGererFiche()) {
+            <button mat-flat-button color="primary" type="button" (click)="creerFiche()">
+              <mat-icon>note_add</mat-icon>
+              Nouvelle fiche
+            </button>
+          }
+        </div>
+
+        @if (fiches().length === 0) {
+          <div class="empty-state">
+            <mat-icon>assignment</mat-icon>
+            <strong>Aucune fiche d’emballage</strong>
+            <span>Créez une fiche pour constater les entrées, sorties et écarts.</span>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="cbc-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Numéro</th>
+                  <th>Statut</th>
+                  <th class="align-right">Lignes</th>
+                  <th>Créée par</th>
+                  <th>Validée par</th>
+                  <th class="align-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fiche of fiches(); track fiche.id) {
+                  <tr>
+                    <td>{{ formaterDate(fiche.dateFiche) }}</td>
+                    <td><span class="cell-title">{{ fiche.numeroFiche }}</span></td>
+                    <td>
+                      <span class="status-chip" [ngClass]="classeStatut(fiche.statut)">
+                        {{ libelleStatut(fiche.statut) }}
+                      </span>
+                    </td>
+                    <td class="align-right">{{ fiche.nombreLignes }}</td>
+                    <td>{{ fiche.creePar ?? '—' }}</td>
+                    <td>{{ fiche.validePar ?? '—' }}</td>
+                    <td class="table-actions">
+                      <button
+                        mat-icon-button
+                        type="button"
+                        aria-label="Voir le détail de la fiche"
+                        (click)="voirFiche(fiche)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      @if (peutValider() && fiche.statut === 'BROUILLON') {
+                        <button
+                          mat-icon-button
+                          color="primary"
+                          type="button"
+                          aria-label="Valider la fiche"
+                          (click)="validerFiche(fiche)">
+                          <mat-icon>task_alt</mat-icon>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+} @else {
+  <div class="empty-state comptoir-vide">
+    <mat-icon>storefront</mat-icon>
+    <strong>Sélectionnez un comptoir</strong>
+    <span>Choisissez un comptoir dans l’en-tête pour consulter ses stocks d’emballage.</span>
+  </div>
+}

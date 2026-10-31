@@ -1,0 +1,164 @@
+.dialog-subtitle {
+  margin: 0 0 0.75rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.dialog-subtitle strong {
+  color: #0f172a;
+}
+
+.fiche-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.entete-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.section-row h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.cell-sub {
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.lignes-list {
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.ligne-entete,
+.ligne-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) 90px 92px 92px 112px 130px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+}
+
+.ligne-entete {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ligne-row {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ligne-row:last-child {
+  border-bottom: none;
+}
+
+.ligne-materiel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ligne-libelle {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ligne-libelle strong {
+  color: #0f172a;
+  font-size: 0.84rem;
+}
+
+.stock-initial,
+.theorique {
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.theorique {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ecart {
+  color: #15803d;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.ecart.negatif {
+  color: #b91c1c;
+}
+
+.ligne-row mat-form-field {
+  width: 100%;
+}
+
+.empty-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 760px) {
+  .entete-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ligne-entete {
+    display: none;
+  }
+
+  .ligne-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ligne-materiel {
+    grid-column: 1 / -1;
+  }
+}

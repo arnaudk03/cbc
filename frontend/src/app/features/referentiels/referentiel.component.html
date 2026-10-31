@@ -55,7 +55,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (campagne of campagnes(); track campagne.id) {
+              @for (campagne of campagnesPaginees(); track campagne.id) {
               <tr>
                 <td class="cell-title">{{ campagne.code }}</td>
                 <td>{{ campagne.libelle }}</td>
@@ -93,6 +93,14 @@
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="campagnes().length"
+          [pageSize]="pageSizeCampagnes()"
+          [pageIndex]="pageIndexCampagnes()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('campagnes', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
       </div>
     </mat-tab>
 
@@ -132,7 +140,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (prixItem of prix(); track prixItem.id) {
+               @for (prixItem of prixPaginees(); track prixItem.id) {
               <tr>
                 <td>
                   <span class="cell-title">{{ prixItem.speculationNom }}</span>
@@ -191,6 +199,14 @@
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="prix().length"
+          [pageSize]="pageSizePrix()"
+          [pageIndex]="pageIndexPrix()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('prix', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
       </div>
     </mat-tab>
 
@@ -209,59 +225,66 @@
           <table class="cbc-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Nom</th>
+                <th style="width: 140px;">Code</th>
+                <th>Nom du comptoir</th>
                 <th>Localité</th>
-                <th>Région</th>
-                <th>Type</th>
-                <th class="align-right">Capacité</th>
-                <th>Statut</th>
-                <th>Actions</th>
+                <th class="align-right" style="width: 140px;">Capacité</th>
+                <th class="align-right" style="width: 220px;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              @for (comptoir of comptoirs(); track comptoir.id) {
+               @for (comptoir of comptoirsPaginees(); track comptoir.id) {
               <tr>
                 <td class="cell-title">{{ comptoir.code }}</td>
                 <td>{{ comptoir.nom }}</td>
                 <td>{{ comptoir.localityNom }}</td>
-                <td>{{ comptoir.regionNom ?? '—' }}</td>
-                <td>{{ comptoir.type }}</td>
                 <td class="align-right">
                   {{ comptoir.capaciteStockageKg | number: '1.0-0' }} kg
                 </td>
-                <td>
-                  <span class="status-chip" [ngClass]="comptoir.actif ? 'succes' : 'neutre'">
-                    {{ comptoir.actif ? 'Actif' : 'Fermé' }}
-                  </span>
-                </td>
-                <td>
-                  @if (peutAdministrer()) {
-                  <div class="row-actions">
-                    <button mat-stroked-button (click)="basculerComptoir(comptoir)">
-                      {{ comptoir.actif ? 'Fermer' : 'Ouvrir' }}
+                <td class="align-right">
+                  <div class="row-actions align-right">
+                    <button mat-icon-button (click)="ouvrirDetail(comptoir)" title="Détail" aria-label="Voir le détail">
+                      <mat-icon>visibility</mat-icon>
                     </button>
-                    <button mat-icon-button aria-label="Modifier le comptoir" (click)="modifierComptoir(comptoir)">
+                    @if (peutAdministrer()) {
+                    <button mat-icon-button (click)="ouvrirEquipements(comptoir)" title="Équipements" aria-label="Gérer les équipements">
+                      <mat-icon>devices_other</mat-icon>
+                    </button>
+                    @if (peutGererUtilisateurs()) {
+                    <button mat-icon-button (click)="ouvrirAffectation(comptoir)" title="Affecter des utilisateurs" aria-label="Affecter des utilisateurs">
+                      <mat-icon>group_add</mat-icon>
+                    </button>
+                    }
+                    <button mat-icon-button (click)="basculerComptoir(comptoir)" [title]="comptoir.actif ? 'Fermer le comptoir' : 'Ouvrir le comptoir'" [attr.aria-label]="comptoir.actif ? 'Fermer le comptoir' : 'Ouvrir le comptoir'">
+                      <mat-icon>{{ comptoir.actif ? 'lock' : 'lock_open' }}</mat-icon>
+                    </button>
+                    <button mat-icon-button title="Modifier" aria-label="Modifier le comptoir" (click)="modifierComptoir(comptoir)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" aria-label="Supprimer le comptoir"
+                    <button mat-icon-button color="warn" title="Supprimer" aria-label="Supprimer le comptoir"
                       (click)="supprimerComptoir(comptoir)">
-                      <mat-icon>delete_outline</mat-icon>
+                      <mat-icon>delete_forever</mat-icon>
                     </button>
+                    }
                   </div>
-                  } @else {
-                  <span class="cell-sub">—</span>
-                  }
                 </td>
               </tr>
               } @empty {
               <tr>
-                <td colspan="8" class="empty-cell">Aucun comptoir enregistré.</td>
+                <td colspan="5" class="empty-cell">Aucun comptoir enregistré.</td>
               </tr>
               }
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="comptoirs().length"
+          [pageSize]="pageSizeComptoirs()"
+          [pageIndex]="pageIndexComptoirs()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('comptoirs', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
       </div>
     </mat-tab>
 
@@ -296,7 +319,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (producteur of producteursFiltres(); track producteur.id) {
+               @for (producteur of producteursPaginees(); track producteur.id) {
               <tr>
                 <td class="cell-title">{{ producteur.nomPrenom }}</td>
                 <td>{{ producteur.telephoneMobileMoney }}</td>
@@ -331,6 +354,14 @@
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="producteursFiltres().length"
+          [pageSize]="pageSizeProducteurs()"
+          [pageIndex]="pageIndexProducteurs()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('producteurs', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
       </div>
     </mat-tab>
 
@@ -359,7 +390,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (magasin of magasins(); track magasin.id) {
+               @for (magasin of magasinsPaginees(); track magasin.id) {
               <tr>
                 <td class="cell-title">{{ magasin.codeMagasin }}</td>
                 <td>{{ magasin.nom }}</td>
@@ -399,6 +430,14 @@
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="magasins().length"
+          [pageSize]="pageSizeMagasins()"
+          [pageIndex]="pageIndexMagasins()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('magasins', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
       </div>
     </mat-tab>
 
@@ -426,7 +465,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (speculation of speculations(); track speculation.id) {
+              @for (speculation of speculationsPaginees(); track speculation.id) {
               <tr>
                 <td class="cell-title">{{ speculation.code }}</td>
                 <td>{{ speculation.nom }}</td>
@@ -462,6 +501,14 @@
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="speculations().length"
+          [pageSize]="pageSizeSpeculations()"
+          [pageIndex]="pageIndexSpeculations()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('speculations', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
       </div>
     </mat-tab>
 
@@ -527,7 +574,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (utilisateur of utilisateurs(); track utilisateur.id) {
+              @for (utilisateur of utilisateursPaginees(); track utilisateur.id) {
               <tr>
                 <td class="cell-title">{{ utilisateur.matricule }}</td>
                 <td>{{ utilisateur.nomComplet }}</td>
@@ -581,6 +628,14 @@
             </tbody>
           </table>
         </div>
+        <mat-paginator
+          [length]="utilisateurs().length"
+          [pageSize]="pageSizeUtilisateurs()"
+          [pageIndex]="pageIndexUtilisateurs()"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="changerPage('utilisateurs', $event)"
+          aria-label="Sélectionner la page">
+        </mat-paginator>
         }
       </div>
     </mat-tab>

@@ -1,5 +1,6 @@
-package bf.gov.anptic.sonagess.cbc.stocks.domain;
+package bf.gov.anptic.sonagess.cbc.equipements.domain;
 
+import bf.gov.anptic.sonagess.cbc.auth.domain.Utilisateur;
 import bf.gov.anptic.sonagess.cbc.referentiels.domain.Comptoir;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,38 +21,46 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "fiches_stock_materiel_emballages")
+@Table(name = "affectations_equipement")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FicheStockMaterielEmballages {
+public class AffectationEquipement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "equipement_id", nullable = false)
+    private Equipement equipement;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comptoir_id", nullable = false)
     private Comptoir comptoir;
 
-    @Column(name = "designation_materiel", nullable = false, length = 100)
-    private String designationMateriel;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "utilisateur_id")
+    private Utilisateur utilisateur;
 
-    @Column(name = "reference_doc", length = 50)
-    private String referenceDoc;
+    @Column(name = "date_debut", nullable = false)
+    private LocalDateTime dateDebut;
 
-    @Column(name = "entrees_emballages")
-    @Builder.Default
-    private Integer entreesEmballages = 0;
+    @Column(name = "date_fin")
+    private LocalDateTime dateFin;
 
-    @Column(name = "sorties_emballages")
-    @Builder.Default
-    private Integer sortiesEmballages = 0;
+    @Column(length = 255)
+    private String motif;
 
-    @Column(name = "stock_emballages", nullable = false)
-    private Integer stockEmballages;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "affecte_par_id")
+    private Utilisateur affectePar;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "retire_par_id")
+    private Utilisateur retirePar;
 
     @CreationTimestamp
     @Column(name = "cree_le", updatable = false)

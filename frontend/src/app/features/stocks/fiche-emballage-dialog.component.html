@@ -1,0 +1,102 @@
+<h2 mat-dialog-title>Nouvelle fiche de stock — emballages</h2>
+<mat-dialog-content>
+  <p class="dialog-subtitle">
+    Comptoir <strong>{{ data.comptoirCode }}</strong> · les stocks initiaux sont repris de la
+    dernière fiche validée.
+  </p>
+
+  <form [formGroup]="form" class="fiche-form">
+    <div class="entete-grid">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Date de la fiche</mat-label>
+        <input matInput type="date" formControlName="dateFiche" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Observations</mat-label>
+        <input matInput formControlName="observations" placeholder="Optionnel" />
+      </mat-form-field>
+    </div>
+
+    @if (erreur) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ erreur }}</span>
+    </div>
+    }
+
+    <div class="section-row">
+      <div>
+        <h3>Lignes de stock</h3>
+        <span class="cell-sub">
+          {{ nombreSelectionnes }} matériel(s) sélectionné(s) sur {{ data.materiels.length }}
+        </span>
+      </div>
+      <mat-checkbox (change)="basculerTout($event.checked)">Tout sélectionner</mat-checkbox>
+    </div>
+
+    <div class="lignes-list">
+      <div class="ligne-entete">
+        <span>Matériel</span>
+        <span>Stock initial</span>
+        <span>Entrées</span>
+        <span>Sorties</span>
+        <span>Stock physique</span>
+        <span>Théorique / écart</span>
+      </div>
+      @for (materiel of data.materiels; track materiel.id; let index = $index) {
+      <div class="ligne-row" [formGroup]="ligneGroupe(index)">
+        <div class="ligne-materiel">
+          <mat-checkbox formControlName="selectionne" />
+          <div class="ligne-libelle">
+            <strong>{{ materiel.libelle }}</strong>
+            <span class="cell-sub">
+              {{ materiel.code }} · {{ libelleUnite(materiel) }} · seuil
+              {{ materiel.seuilAlerte }}
+            </span>
+          </div>
+        </div>
+        <span class="stock-initial">{{ stockInitial(materiel.id) }}</span>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <input matInput type="number" min="0" formControlName="entrees" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <input matInput type="number" min="0" formControlName="sorties" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <input
+            matInput
+            type="number"
+            min="0"
+            formControlName="stockPhysique"
+            placeholder="Auto" />
+        </mat-form-field>
+        <span class="theorique">
+          {{ theorique(index) }}
+          @if (ecart(index) !== null) {
+          <span class="ecart" [class.negatif]="(ecart(index) ?? 0) < 0">
+            écart {{ ecart(index) }}
+          </span>
+          }
+        </span>
+      </div>
+      } @empty {
+      <div class="empty-block">
+        <mat-icon>inventory_2</mat-icon>
+        <span>Aucun matériel d'emballage actif. Créez d'abord un matériel.</span>
+      </div>
+      }
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="annuler()">Annuler</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="nombreSelectionnes === 0"
+    (click)="valider()">
+    <mat-icon>save</mat-icon>
+    Enregistrer la fiche
+  </button>
+</mat-dialog-actions>

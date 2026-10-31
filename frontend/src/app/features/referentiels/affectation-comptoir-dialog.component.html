@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>Affecter des utilisateurs</h2>
+<mat-dialog-content>
+  <p class="dialog-subtitle">
+    Comptoir <strong>{{ data.comptoir.code }}</strong> — {{ data.comptoir.nom }}
+  </p>
+
+  <div class="info-banner">
+    <mat-icon>info</mat-icon>
+    <span>Un utilisateur ne peut être rattaché qu'à un seul comptoir.</span>
+  </div>
+
+  <div class="summary-row">
+    <span class="count-chip succes">{{ disponibles().length }} disponible(s)</span>
+    <span class="count-chip neutre">{{ dejaAffectes() }} déjà affecté(s) ici</span>
+    <span class="count-chip neutre">{{ affectesAilleurs() }} affecté(s) ailleurs (exclus)</span>
+  </div>
+
+  <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+    <mat-label>Rechercher un utilisateur</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input
+      matInput
+      [ngModel]="recherche()"
+      (ngModelChange)="recherche.set($event)"
+      placeholder="Nom, matricule ou e-mail" />
+  </mat-form-field>
+
+  <div class="selection-row">
+    <mat-checkbox [checked]="tousSelectionnes()" (change)="basculerTout($event.checked)">
+      Tout sélectionner
+    </mat-checkbox>
+    <span class="cell-sub">{{ selection().length }} sélectionné(s)</span>
+  </div>
+
+  <div class="utilisateurs-list">
+    @for (utilisateur of disponibles(); track utilisateur.id) {
+    <div class="utilisateur-row" [class.selected]="estSelectionne(utilisateur.id)">
+      <mat-checkbox
+        [checked]="estSelectionne(utilisateur.id)"
+        (change)="basculer(utilisateur.id, $event.checked)" />
+      <div class="utilisateur-main">
+        <span class="utilisateur-nom">{{ utilisateur.nomComplet }}</span>
+        <span class="cell-sub">{{ utilisateur.matricule }} · {{ utilisateur.email }}</span>
+        <span class="role-list">
+          @for (role of utilisateur.roles; track role) {
+          <span class="role-chip">{{ libelleRole(role) }}</span>
+          }
+        </span>
+      </div>
+    </div>
+    } @empty {
+    <div class="empty-block">
+      <mat-icon>group_off</mat-icon>
+      <span>Aucun utilisateur disponible pour cette affectation.</span>
+    </div>
+    }
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="annuler()">Annuler</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="selection().length === 0"
+    (click)="valider()">
+    <mat-icon>group_add</mat-icon>
+    Affecter {{ selection().length }} utilisateur(s)
+  </button>
+</mat-dialog-actions>

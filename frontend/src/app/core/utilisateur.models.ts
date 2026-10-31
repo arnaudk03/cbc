@@ -32,3 +32,14 @@ export interface UtilisateurPayload {
   actif: boolean;
   comptoirId: number | null;
 }
+
+export interface AffectationComptoirPayload {
+  utilisateurIds: number[];
+}
+
+export interface AffectationComptoirResult {
+  comptoirId: number;
+  comptoirCode: string;
+  comptoirNom: string;
+  affectes: number;
+}

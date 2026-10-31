@@ -66,6 +66,19 @@ public final class UtilisateurDtos {
         }
     }
 
+    public record AffectationComptoirRequest(
+            @NotEmpty(message = "Sélectionnez au moins un utilisateur") List<Long> utilisateurIds
+    ) {
+    }
+
+    public record AffectationComptoirResponse(
+            Long comptoirId,
+            String comptoirCode,
+            String comptoirNom,
+            int affectes
+    ) {
+    }
+
     public record RoleOption(String code, String libelle) {
         public static RoleOption from(Role role) {
             return new RoleOption(role.getCode(), role.getLibelle());

@@ -3,7 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiResponse } from './auth.models';
-import { RoleOption, Utilisateur, UtilisateurPayload } from './utilisateur.models';
+import {
+  AffectationComptoirPayload,
+  AffectationComptoirResult,
+  RoleOption,
+  Utilisateur,
+  UtilisateurPayload
+} from './utilisateur.models';
 
 @Injectable({ providedIn: 'root' })
 export class UtilisateurService {
@@ -43,5 +49,18 @@ export class UtilisateurService {
 
   supprimer(id: number): Observable<unknown> {
     return this.http.delete(`${this.baseUrl}/utilisateurs/${id}`);
+  }
+
+  affecterAuComptoir(
+    comptoirId: number,
+    utilisateurIds: number[]
+  ): Observable<AffectationComptoirResult> {
+    const payload: AffectationComptoirPayload = { utilisateurIds };
+    return this.http
+      .post<ApiResponse<AffectationComptoirResult>>(
+        `${this.baseUrl}/comptoirs/${comptoirId}/utilisateurs`,
+        payload
+      )
+      .pipe(map((reponse) => reponse.data));
   }
 }

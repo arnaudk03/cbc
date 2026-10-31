@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Observable, forkJoin } from 'rxjs';
 import {
   Campagne,
@@ -29,7 +30,10 @@ import { AuthService } from '../../core/auth.service';
 import { ReferentielService } from '../../core/referentiel.service';
 import { RoleOption, Utilisateur, UtilisateurPayload } from '../../core/utilisateur.models';
 import { UtilisateurService } from '../../core/utilisateur.service';
+import { AffectationComptoirDialogComponent } from './affectation-comptoir-dialog.component';
+import { ComptoirDetailDialogComponent } from './comptoir-detail-dialog.component';
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
+import { EquipementsComptoirDialogComponent } from './equipements-comptoir-dialog.component';
 import {
   FormDialogData,
   FormFieldDefinition,
@@ -45,6 +49,23 @@ import {
 } from './referentiel.models';
 import { ReferentielMetierService } from './referentiel.service';
 
+class PaginatorFr extends MatPaginatorIntl {
+  override itemsPerPageLabel = 'Éléments par page';
+  override nextPageLabel = 'Page suivante';
+  override previousPageLabel = 'Page précédente';
+  override firstPageLabel = 'Première page';
+  override lastPageLabel = 'Dernière page';
+
+  override getRangeLabel = (page: number, pageSize: number, length: number): string => {
+    if (length === 0 || pageSize === 0) {
+      return `0 sur ${length}`;
+    }
+    const debut = page * pageSize;
+    const fin = Math.min(debut + pageSize, length);
+    return `${debut + 1} – ${fin} sur ${length}`;
+  };
+}
+
 @Component({
   selector: 'app-referentiel',
   standalone: true,
@@ -59,10 +80,12 @@ import { ReferentielMetierService } from './referentiel.service';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatPaginatorModule
   ],
   templateUrl: './referentiel.component.html',
-  styleUrl: './referentiel.component.scss'
+  styleUrl: './referentiel.component.scss',
+  providers: [{ provide: MatPaginatorIntl, useClass: PaginatorFr }]
 })
 export class ReferentielComponent implements OnInit {
   private readonly referentielService = inject(ReferentielService);
@@ -99,18 +122,96 @@ export class ReferentielComponent implements OnInit {
   );
   readonly peutGererMagasins = computed(() => this.auth.possedeUnRole('ADMIN', 'DGSA', 'SGS'));
   readonly peutGererUtilisateurs = computed(() => this.auth.possedeUnRole('ADMIN'));
-  readonly producteursFiltres = computed(() => {
-    const recherche = this.rechercheProducteur().trim().toLowerCase();
-    if (!recherche) {
-      return this.producteurs();
+   readonly producteursFiltres = computed(() => {
+     const recherche = this.rechercheProducteur().trim().toLowerCase();
+     if (!recherche) {
+       return this.producteurs();
+     }
+     return this.producteurs().filter(
+       (producteur) =>
+         producteur.nomPrenom.toLowerCase().includes(recherche) ||
+         producteur.telephoneMobileMoney.includes(recherche) ||
+         producteur.cnibNumero.toLowerCase().includes(recherche)
+     );
+   });
+
+   readonly pageIndexCampagnes = signal(0);
+   readonly pageSizeCampagnes = signal(5);
+   readonly campagnesPaginees = computed(() => this.paginer(this.campagnes(), this.pageIndexCampagnes(), this.pageSizeCampagnes()));
+
+   readonly pageIndexPrix = signal(0);
+   readonly pageSizePrix = signal(5);
+   readonly prixPaginees = computed(() => this.paginer(this.prix(), this.pageIndexPrix(), this.pageSizePrix()));
+
+   readonly pageIndexComptoirs = signal(0);
+   readonly pageSizeComptoirs = signal(5);
+   readonly comptoirsPaginees = computed(() => this.paginer(this.comptoirs(), this.pageIndexComptoirs(), this.pageSizeComptoirs()));
+
+   readonly pageIndexProducteurs = signal(0);
+   readonly pageSizeProducteurs = signal(5);
+   readonly producteursPaginees = computed(() => this.paginer(this.producteursFiltres(), this.pageIndexProducteurs(), this.pageSizeProducteurs()));
+
+   readonly pageIndexMagasins = signal(0);
+   readonly pageSizeMagasins = signal(5);
+   readonly magasinsPaginees = computed(() => this.paginer(this.magasins(), this.pageIndexMagasins(), this.pageSizeMagasins()));
+
+   readonly pageIndexSpeculations = signal(0);
+   readonly pageSizeSpeculations = signal(5);
+   readonly speculationsPaginees = computed(() => this.paginer(this.speculations(), this.pageIndexSpeculations(), this.pageSizeSpeculations()));
+
+   readonly pageIndexUtilisateurs = signal(0);
+   readonly pageSizeUtilisateurs = signal(5);
+   readonly utilisateursPaginees = computed(() => this.paginer(this.utilisateurs(), this.pageIndexUtilisateurs(), this.pageSizeUtilisateurs()));
+
+   constructor() {
+     effect(() => {
+       this.rechercheProducteur();
+       this.pageIndexProducteurs.set(0);
+     }, { allowSignalWrites: true });
+   }
+
+  paginer<T>(liste: T[], pageIndex: number, pageSize: number): T[] {
+    if (!liste || liste.length === 0) {
+      return [];
     }
-    return this.producteurs().filter(
-      (producteur) =>
-        producteur.nomPrenom.toLowerCase().includes(recherche) ||
-        producteur.telephoneMobileMoney.includes(recherche) ||
-        producteur.cnibNumero.toLowerCase().includes(recherche)
-    );
-  });
+    const maxPageIndex = Math.max(0, Math.ceil(liste.length / pageSize) - 1);
+    const indexEffectif = Math.min(pageIndex, maxPageIndex);
+    const debut = indexEffectif * pageSize;
+    return liste.slice(debut, debut + pageSize);
+  }
+
+   changerPage(table: 'campagnes' | 'prix' | 'comptoirs' | 'producteurs' | 'magasins' | 'speculations' | 'utilisateurs', event: PageEvent): void {
+     switch (table) {
+       case 'campagnes':
+         this.pageIndexCampagnes.set(event.pageIndex);
+         this.pageSizeCampagnes.set(event.pageSize);
+         break;
+       case 'prix':
+         this.pageIndexPrix.set(event.pageIndex);
+         this.pageSizePrix.set(event.pageSize);
+         break;
+       case 'comptoirs':
+         this.pageIndexComptoirs.set(event.pageIndex);
+         this.pageSizeComptoirs.set(event.pageSize);
+         break;
+       case 'producteurs':
+         this.pageIndexProducteurs.set(event.pageIndex);
+         this.pageSizeProducteurs.set(event.pageSize);
+         break;
+       case 'magasins':
+         this.pageIndexMagasins.set(event.pageIndex);
+         this.pageSizeMagasins.set(event.pageSize);
+         break;
+       case 'speculations':
+         this.pageIndexSpeculations.set(event.pageIndex);
+         this.pageSizeSpeculations.set(event.pageSize);
+         break;
+       case 'utilisateurs':
+         this.pageIndexUtilisateurs.set(event.pageIndex);
+         this.pageSizeUtilisateurs.set(event.pageSize);
+         break;
+     }
+   }
 
   ngOnInit(): void {
     this.charger();
@@ -162,15 +263,16 @@ export class ReferentielComponent implements OnInit {
     });
   }
 
-  chargerPrix(campagneId: number): void {
-    this.campagnePrix.set(campagneId);
-    this.referentielMetier.prixGarantis(campagneId).subscribe({
+   chargerPrix(campagneId: number): void {
+     this.campagnePrix.set(campagneId);
+     this.pageIndexPrix.set(0);
+     this.referentielMetier.prixGarantis(campagneId).subscribe({
       next: (prix) => this.prix.set(prix),
       error: () => this.erreur.set('Impossible de charger les prix garantis.')
     });
   }
 
-  chargerUtilisateurs(): void {
+  chargerUtilisateurs(apresChargement?: () => void): void {
     if (!this.peutGererUtilisateurs()) {
       return;
     }
@@ -183,6 +285,7 @@ export class ReferentielComponent implements OnInit {
         this.utilisateurs.set(donnees.utilisateurs);
         this.roles.set(donnees.roles);
         this.chargementUtilisateurs.set(false);
+        apresChargement?.();
       },
       error: () => {
         this.chargementUtilisateurs.set(false);
@@ -341,6 +444,66 @@ export class ReferentielComponent implements OnInit {
         );
       }
     );
+  }
+
+  ouvrirDetail(comptoir: Comptoir): void {
+    this.dialog.open(ComptoirDetailDialogComponent, {
+      data: { comptoir },
+      width: '560px',
+      maxWidth: '96vw'
+    });
+  }
+
+  ouvrirAffectation(comptoir: Comptoir): void {
+    if (this.utilisateurs().length === 0) {
+      if (this.chargementUtilisateurs()) {
+        this.notifier('Chargement des utilisateurs en cours, veuillez réessayer.');
+        return;
+      }
+      this.chargerUtilisateurs(() => this.afficherAffectation(comptoir));
+      return;
+    }
+    this.afficherAffectation(comptoir);
+  }
+
+  ouvrirEquipements(comptoir: Comptoir): void {
+    const afficher = () =>
+      this.dialog.open(EquipementsComptoirDialogComponent, {
+        data: { comptoir, utilisateurs: this.utilisateurs() },
+        width: '880px',
+        maxWidth: '97vw',
+        maxHeight: '94vh'
+      });
+    if (this.peutGererUtilisateurs() && this.utilisateurs().length === 0) {
+      this.chargerUtilisateurs(afficher);
+      return;
+    }
+    afficher();
+  }
+
+  private afficherAffectation(comptoir: Comptoir): void {
+    this.dialog
+      .open(AffectationComptoirDialogComponent, {
+        data: { comptoir, utilisateurs: this.utilisateurs() },
+        width: '720px',
+        maxWidth: '96vw',
+        maxHeight: '92vh'
+      })
+      .afterClosed()
+      .subscribe((ids: number[] | undefined) => {
+        if (!ids || ids.length === 0) {
+          return;
+        }
+        this.utilisateurService.affecterAuComptoir(comptoir.id, ids).subscribe({
+          next: (resultat) => {
+            this.notifier(
+              `${resultat.affectes} utilisateur(s) affecté(s) au comptoir ${resultat.comptoirCode}.`
+            );
+            this.chargerUtilisateurs();
+          },
+          error: (erreur) => this.notifier(this.messageErreur(erreur))
+        });
+      });
   }
 
   modifierComptoir(comptoir: Comptoir): void {

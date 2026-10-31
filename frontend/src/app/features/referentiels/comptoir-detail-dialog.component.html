@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>Détail du comptoir</h2>
+<mat-dialog-content>
+  <div class="detail-header">
+    <div class="detail-icon">
+      <mat-icon>storefront</mat-icon>
+    </div>
+    <div class="detail-identite">
+      <span class="cell-sub">{{ data.comptoir.code }}</span>
+      <strong>{{ data.comptoir.nom }}</strong>
+      <span class="status-chip" [ngClass]="data.comptoir.actif ? 'succes' : 'neutre'">
+        {{ data.comptoir.actif ? 'Actif' : 'Fermé' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-item">
+      <span>Région</span>
+      <strong>{{ data.comptoir.regionNom ?? '—' }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Localité</span>
+      <strong>{{ data.comptoir.localityNom }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Type</span>
+      <strong>{{ libelleType(data.comptoir.type) }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Capacité de stockage</span>
+      <strong>{{ data.comptoir.capaciteStockageKg ?? 0 | number: '1.0-0' }} kg</strong>
+    </div>
+    <div class="detail-item">
+      <span>Coordonnées GPS</span>
+      <strong>{{ coordonnees() }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Identifiant</span>
+      <strong>{{ data.comptoir.id }}</strong>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="fermer()">Fermer</button>
+</mat-dialog-actions>

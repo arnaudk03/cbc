@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -142,6 +143,53 @@ public class UtilisateurService {
         changerActivation(utilisateurId, false, acteur);
         auditService.succes(acteur, "SUPPRESSION_UTILISATEUR", "Utilisateur", utilisateurId,
                 "Utilisateur désactivé (suppression logique)");
+    }
+
+    @Transactional
+    public UtilisateurDtos.AffectationComptoirResponse affecterAuComptoir(Long comptoirId,
+                                                                          List<Long> utilisateurIds,
+                                                                          Utilisateur acteur) {
+        Comptoir comptoir = comptoirRepository.findById(comptoirId)
+                .orElseThrow(() -> new ResourceNotFoundException("Comptoir introuvable."));
+        Set<Long> idsUniques = new LinkedHashSet<>(utilisateurIds);
+        if (idsUniques.contains(null)) {
+            throw new BusinessException("Un identifiant d'utilisateur est invalide.");
+        }
+        List<Utilisateur> utilisateurs = utilisateurRepository.findAllById(idsUniques);
+        if (utilisateurs.size() != idsUniques.size()) {
+            throw new ResourceNotFoundException("Un ou plusieurs utilisateurs sont introuvables.");
+        }
+        List<Utilisateur> conflits = utilisateurs.stream()
+                .filter(utilisateur -> utilisateur.getComptoir() != null
+                        && !comptoirId.equals(utilisateur.getComptoir().getId()))
+                .toList();
+        if (!conflits.isEmpty()) {
+            String noms = conflits.stream()
+                    .map(Utilisateur::getNomComplet)
+                    .limit(5)
+                    .reduce((gauche, droite) -> gauche + ", " + droite)
+                    .orElse("");
+            if (conflits.size() > 5) {
+                noms += "…";
+            }
+            throw new BusinessException(
+                    "Un utilisateur ne peut être affecté qu'à un seul comptoir. Déjà rattaché(s) ailleurs : "
+                            + noms + ".", HttpStatus.CONFLICT);
+        }
+        int affectes = 0;
+        for (Utilisateur utilisateur : utilisateurs) {
+            if (utilisateur.getComptoir() == null) {
+                utilisateur.setComptoir(comptoir);
+                affectes++;
+            }
+        }
+        if (affectes > 0) {
+            utilisateurRepository.saveAll(utilisateurs);
+            auditService.succes(acteur, "AFFECTATION_UTILISATEURS_COMPTOIR", "Comptoir", comptoirId,
+                    affectes + " utilisateur(s) affecté(s) au comptoir " + comptoir.getCode());
+        }
+        return new UtilisateurDtos.AffectationComptoirResponse(
+                comptoir.getId(), comptoir.getCode(), comptoir.getNom(), affectes);
     }
 
     @Transactional(readOnly = true)

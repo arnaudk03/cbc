@@ -1,5 +1,7 @@
 package bf.gov.anptic.sonagess.cbc.referentiels.web;
 
+import bf.gov.anptic.sonagess.cbc.auth.dto.UtilisateurDtos;
+import bf.gov.anptic.sonagess.cbc.auth.service.UtilisateurService;
 import bf.gov.anptic.sonagess.cbc.referentiels.service.ReferentielService;
 import bf.gov.anptic.sonagess.cbc.common.ApiResponse;
 import bf.gov.anptic.sonagess.cbc.security.CustomUserDetails;
@@ -28,6 +30,7 @@ import java.util.List;
 public class ComptoirController {
 
     private final ReferentielService referentielService;
+    private final UtilisateurService utilisateurService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ReferentielDtos.ComptoirResponse>>> lister(
@@ -57,6 +60,18 @@ public class ComptoirController {
                 referentielService.changerActivationComptoir(id, actif,
                         referentielService.utilisateurCourant(principal.getId())),
                 actif ? "Comptoir ouvert." : "Comptoir fermé."));
+    }
+
+    @PostMapping("/{id}/utilisateurs")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UtilisateurDtos.AffectationComptoirResponse>> affecterUtilisateurs(
+            @PathVariable Long id,
+            @Valid @RequestBody UtilisateurDtos.AffectationComptoirRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                utilisateurService.affecterAuComptoir(id, request.utilisateurIds(),
+                        referentielService.utilisateurCourant(principal.getId())),
+                "Utilisateurs affectés au comptoir."));
     }
 
     @PutMapping("/{id}")

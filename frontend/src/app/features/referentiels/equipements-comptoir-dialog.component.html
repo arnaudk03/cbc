@@ -1,0 +1,196 @@
+<h2 mat-dialog-title>Équipements du comptoir</h2>
+<mat-dialog-content>
+  <p class="dialog-subtitle">
+    Comptoir <strong>{{ data.comptoir.code }}</strong> — {{ data.comptoir.nom }}
+  </p>
+
+  <div class="info-banner">
+    <mat-icon>info</mat-icon>
+    <span>
+      Les équipements durables sont rattachés au comptoir. Un détenteur est optionnel ;
+      une tablette ne peut être confiée qu'à un agent collecteur ou un chef de comptoir.
+    </span>
+  </div>
+
+  @if (chargement()) {
+  <div class="loading-block">
+    <mat-icon>hourglass_empty</mat-icon>
+    <span>Chargement des équipements…</span>
+  </div>
+  } @else {
+  @if (erreur()) {
+  <div class="error-banner">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ erreur() }}</span>
+    <button mat-stroked-button type="button" (click)="charger()">Réessayer</button>
+  </div>
+  }
+
+  <div class="toolbar">
+    <div class="summary-row">
+      <span class="count-chip succes">{{ affectes().length }} affecté(s)</span>
+      <span class="count-chip neutre">{{ disponibles().length }} disponible(s)</span>
+    </div>
+    <button mat-stroked-button type="button" (click)="creerEquipement()">
+      <mat-icon>add</mat-icon>
+      Nouvel équipement
+    </button>
+  </div>
+
+  <section class="equipement-section">
+    <h3>Affectés au comptoir</h3>
+    <div class="equipement-list">
+      @for (equipement of affectes(); track equipement.id) {
+      <div class="equipement-row">
+        <div class="equipement-icon">
+          <mat-icon>{{ icone(equipement.type) }}</mat-icon>
+        </div>
+        <div class="equipement-main">
+          <span class="equipement-nom">{{ equipement.designation }}</span>
+          <span class="cell-sub">
+            {{ equipement.code }} · {{ libelleType(equipement.type) }}
+            @if (equipement.numeroSerie) { · N° {{ equipement.numeroSerie }} }
+          </span>
+          @if (equipement.tablette?.imei) {
+          <span class="cell-sub">IMEI {{ equipement.tablette?.imei }}</span>
+          }
+        </div>
+        <div class="equipement-meta">
+          <span class="status-chip" [ngClass]="classeEtat(equipement.etat)">
+            {{ libelleEtat(equipement.etat) }}
+          </span>
+          @if (equipement.affectation?.utilisateurNomComplet) {
+          <span class="detenteur-chip">
+            <mat-icon>person</mat-icon>
+            {{ equipement.affectation?.utilisateurNomComplet }}
+          </span>
+          } @else {
+          <span class="detenteur-chip neutre">
+            <mat-icon>business</mat-icon>
+            Comptoir
+          </span>
+          }
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Retirer l'équipement du comptoir"
+            (click)="retirer(equipement)">
+            <mat-icon>link_off</mat-icon>
+          </button>
+        </div>
+      </div>
+      } @empty {
+      <div class="empty-block">
+        <mat-icon>devices_other</mat-icon>
+        <span>Aucun équipement affecté à ce comptoir.</span>
+      </div>
+      }
+    </div>
+  </section>
+
+  <section class="equipement-section">
+    <h3>Affecter des équipements disponibles</h3>
+
+    <div class="filtres">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Rechercher</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [ngModel]="recherche()"
+          (ngModelChange)="recherche.set($event)"
+          placeholder="Désignation, code ou numéro de série" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Type</mat-label>
+        <mat-select
+          [ngModel]="typeFiltre()"
+          (ngModelChange)="typeFiltre.set($event)">
+          <mat-option value="TOUS">Tous les types</mat-option>
+          @for (type of types; track type[0]) {
+          <mat-option [value]="type[0]">{{ type[1] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    @if (disponiblesFiltres().length > 0) {
+    <div class="selection-row">
+      <mat-checkbox [checked]="tousSelectionnes()" (change)="basculerTout($event.checked)">
+        Tout sélectionner
+      </mat-checkbox>
+      <span class="cell-sub">{{ selection().length }} sélectionné(s)</span>
+    </div>
+
+    <div class="equipement-list selection-list">
+      @for (equipement of disponiblesFiltres(); track equipement.id) {
+      <div class="equipement-row" [class.selected]="estSelectionne(equipement.id)">
+        <mat-checkbox
+          [checked]="estSelectionne(equipement.id)"
+          (change)="basculer(equipement.id, $event.checked)" />
+        <div class="equipement-icon">
+          <mat-icon>{{ icone(equipement.type) }}</mat-icon>
+        </div>
+        <div class="equipement-main">
+          <span class="equipement-nom">{{ equipement.designation }}</span>
+          <span class="cell-sub">
+            {{ equipement.code }} · {{ libelleType(equipement.type) }}
+            @if (equipement.numeroSerie) { · N° {{ equipement.numeroSerie }} }
+          </span>
+        </div>
+        <div class="equipement-meta">
+          <span class="status-chip" [ngClass]="classeEtat(equipement.etat)">
+            {{ libelleEtat(equipement.etat) }}
+          </span>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="empty-block">
+      <mat-icon>inventory_2</mat-icon>
+      <span>Aucun équipement disponible pour ces critères.</span>
+    </div>
+    }
+
+    <div class="affectation-panel">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Confier à (optionnel)</mat-label>
+        <mat-select
+          [ngModel]="utilisateurId()"
+          (ngModelChange)="utilisateurId.set($event)">
+          <mat-option [value]="null">Aucun détenteur — équipement du comptoir</mat-option>
+          @for (utilisateur of utilisateursEligibles(); track utilisateur.id) {
+          <mat-option [value]="utilisateur.id">
+            {{ utilisateur.nomComplet }} — {{ utilisateur.matricule }}
+          </mat-option>
+          }
+        </mat-select>
+        <mat-hint>
+          Seuls les agents collecteurs et chefs de comptoir rattachés à ce comptoir sont proposés.
+        </mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Motif (optionnel)</mat-label>
+        <input
+          matInput
+          [ngModel]="motif()"
+          (ngModelChange)="motif.set($event)"
+          placeholder="Ex. dotation de collecte" />
+      </mat-form-field>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="selection().length === 0"
+        (click)="affecterSelection()">
+        <mat-icon>add_link</mat-icon>
+        Affecter {{ selection().length }} équipement(s)
+      </button>
+    </div>
+  </section>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="fermer()">Fermer</button>
+</mat-dialog-actions>

@@ -102,12 +102,14 @@
       </div>
     </div>
 
+    @if (peutSaisirPesee()) {
     <div class="ticker-actions">
       <a mat-button class="ticker-quick-action" routerLink="/collectes" matTooltip="Raccourci clavier : touche N">
         <mat-icon>add_circle_outline</mat-icon>
         <span>Nouvelle Pesée (N)</span>
       </a>
     </div>
+    }
   </aside>
 </header>
 }
@@ -123,14 +125,6 @@
         <span>{{ menu.label }}</span>
       </a>
       }
-    </div>
-
-    <div class="sidebar-footer-widget">
-      <div class="sidebar-widget-title">Raccourci</div>
-      <button type="button" class="sidebar-pesee-btn" routerLink="/collectes">
-        <mat-icon>add_circle_outline</mat-icon>
-        <span>Nouvelle Pesée (N)</span>
-      </button>
     </div>
   </nav>
   }

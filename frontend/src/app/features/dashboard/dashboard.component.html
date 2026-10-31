@@ -1,12 +1,11 @@
 <div class="dashboard-container">
 
   @if (chargement()) {
-    <mat-progress-bar mode="indeterminate" class="global-loader"></mat-progress-bar>
+  <mat-progress-bar mode="indeterminate" class="global-loader"></mat-progress-bar>
   }
 
   <header class="page-intro">
     <div class="page-intro-text">
-      <span class="intro-eyebrow">BURKINA FASO · SONAGESS</span>
       <h1>Tableau de bord</h1>
       <p>
         Bonjour{{ auth.user()?.prenom ? ', ' + auth.user()?.prenom : '' }} — voici l'état de la
@@ -18,225 +17,222 @@
         <mat-icon>refresh</mat-icon>
         Actualiser
       </button>
-      <a mat-flat-button class="btn-primary" routerLink="/collectes">
-        <mat-icon>add</mat-icon>
-        Nouvelle pesée
-      </a>
+
     </div>
   </header>
 
   @if (erreur(); as message) {
-    <div class="error-banner" role="alert">
-      <mat-icon>cloud_off</mat-icon>
-      <div>
-        <strong>Données indisponibles</strong>
-        <span>{{ message }}</span>
-      </div>
-      <button mat-stroked-button (click)="charger()">Réessayer</button>
+  <div class="error-banner" role="alert">
+    <mat-icon>cloud_off</mat-icon>
+    <div>
+      <strong>Données indisponibles</strong>
+      <span>{{ message }}</span>
     </div>
+    <button mat-stroked-button (click)="charger()">Réessayer</button>
+  </div>
   }
 
   @if (donnees()) {
-    @if (campagneActive(); as campagne) {
-      <section class="campagne-hero">
-        <div class="hero-info">
-          <div class="hero-topline">
-            <span class="statut-dot"></span>
-            <span class="hero-code">{{ campagne.code }}</span>
-            <span class="hero-statut">{{ campagne.statut }}</span>
-          </div>
-          <h2>{{ campagne.libelle }}</h2>
-          <p class="hero-period">
-            <mat-icon>calendar_today</mat-icon>
-            {{ campagne.dateDebut }} → {{ campagne.dateFin }}
-          </p>
-        </div>
-
-        <div class="hero-progress">
-          <div class="progress-labels">
-            <span>Progression de la campagne</span>
-            <strong>{{ campagne.tauxRealisation }}%</strong>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill" [style.width.%]="campagne.tauxRealisation"></div>
-          </div>
-          <div class="progress-values">
-            <span><strong>{{ campagne.collecteTonnes | number:'1.0-2' }}</strong> t collectées</span>
-            <span>Objectif <strong>{{ campagne.objectifTonnes | number:'1.0-0' }}</strong> t</span>
-          </div>
-        </div>
-      </section>
-    } @else {
-      <div class="campagne-empty">
-        <mat-icon>event_busy</mat-icon>
-        <div>
-          <strong>Aucune campagne ouverte</strong>
-          <span>Les indicateurs s'afficheront dès l'ouverture d'une campagne.</span>
-        </div>
+  @if (campagneActive(); as campagne) {
+  <section class="campagne-hero">
+    <div class="hero-info">
+      <div class="hero-topline">
+        <span class="statut-dot"></span>
+        <span class="hero-code">{{ campagne.code }}</span>
+        <span class="hero-statut">{{ campagne.statut }}</span>
       </div>
-    }
+      <h2>{{ campagne.libelle }}</h2>
+      <p class="hero-period">
+        <mat-icon>calendar_today</mat-icon>
+        {{ campagne.dateDebut }} → {{ campagne.dateFin }}
+      </p>
+    </div>
 
-    <section class="kpi-grid">
-      @for (kpi of kpis(); track kpi.titre) {
-        <div class="kpi-card" [ngClass]="'kpi-' + kpi.type">
-          <span class="kpi-icon-wrap">
-            <mat-icon>{{ kpi.icone }}</mat-icon>
-          </span>
-          <div class="kpi-content">
-            <span class="kpi-label">{{ kpi.titre }}</span>
-            <strong class="kpi-value">{{ kpi.valeur }}</strong>
-            <span class="kpi-detail">{{ kpi.detail }}</span>
+    <div class="hero-progress">
+      <div class="progress-labels">
+        <span>Progression de la campagne</span>
+        <strong>{{ campagne.tauxRealisation }}%</strong>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="campagne.tauxRealisation"></div>
+      </div>
+      <div class="progress-values">
+        <span><strong>{{ campagne.collecteTonnes | number:'1.0-2' }}</strong> t collectées</span>
+        <span>Objectif <strong>{{ campagne.objectifTonnes | number:'1.0-0' }}</strong> t</span>
+      </div>
+    </div>
+  </section>
+  } @else {
+  <div class="campagne-empty">
+    <mat-icon>event_busy</mat-icon>
+    <div>
+      <strong>Aucune campagne ouverte</strong>
+      <span>Les indicateurs s'afficheront dès l'ouverture d'une campagne.</span>
+    </div>
+  </div>
+  }
+
+  <section class="kpi-grid">
+    @for (kpi of kpis(); track kpi.titre) {
+    <div class="kpi-card" [ngClass]="'kpi-' + kpi.type">
+      <span class="kpi-icon-wrap">
+        <mat-icon>{{ kpi.icone }}</mat-icon>
+      </span>
+      <div class="kpi-content">
+        <span class="kpi-label">{{ kpi.titre }}</span>
+        <strong class="kpi-value">{{ kpi.valeur }}</strong>
+        <span class="kpi-detail">{{ kpi.detail }}</span>
+      </div>
+    </div>
+    }
+  </section>
+
+  <section class="content-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <mat-icon>grain</mat-icon>
+          <div>
+            <h3>Cotations &amp; volumes</h3>
+            <p>Prix garantis bord champ de la campagne</p>
           </div>
         </div>
-      }
-    </section>
+        <span class="panel-chip">{{ speculationsTable().length }} spéculation(s)</span>
+      </div>
 
-    <section class="content-grid">
+      @if (speculationsTable().length === 0) {
+      <div class="panel-empty">
+        <mat-icon>inbox</mat-icon>
+        <span>Aucune collecte enregistrée pour cette campagne.</span>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="bourse-table">
+          <thead>
+            <tr>
+              <th>Spéculation</th>
+              <th class="align-right">Prix garanti</th>
+              <th>Volume collecté</th>
+              <th class="align-right">Valeur estimée</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (spec of speculationsTable(); track spec.code) {
+            <tr>
+              <td>
+                <div class="spec-cell">
+                  <strong>{{ spec.nom }}</strong>
+                  <span>{{ spec.code }}</span>
+                </div>
+              </td>
+              <td class="align-right">
+                <span class="prix">{{ spec.prixGarantiKg }} <small>FCFA/kg</small></span>
+              </td>
+              <td>
+                <div class="volume-cell">
+                  <div class="volume-top">
+                    <strong>{{ spec.tonnage | number:'1.0-0' }} t</strong>
+                    <span>{{ spec.partPourcent }}%</span>
+                  </div>
+                  <div class="volume-bar">
+                    <div [style.width.%]="spec.partPourcent"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="align-right">
+                <span class="montant">{{ formaterMontant(spec.valeurEstimeeCfa) }}</span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+
+    <div class="side-stack">
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">
-            <mat-icon>grain</mat-icon>
+            <mat-icon>task_alt</mat-icon>
             <div>
-              <h3>Cotations &amp; volumes</h3>
-              <p>Prix garantis bord champ de la campagne</p>
+              <h3>À traiter</h3>
+              <p>Actions qui vous attendent</p>
             </div>
           </div>
-          <span class="panel-chip">{{ speculationsTable().length }} spéculation(s)</span>
         </div>
 
-        @if (speculationsTable().length === 0) {
-          <div class="panel-empty">
-            <mat-icon>inbox</mat-icon>
-            <span>Aucune collecte enregistrée pour cette campagne.</span>
-          </div>
-        } @else {
-          <div class="table-responsive">
-            <table class="bourse-table">
-              <thead>
-                <tr>
-                  <th>Spéculation</th>
-                  <th class="align-right">Prix garanti</th>
-                  <th>Volume collecté</th>
-                  <th class="align-right">Valeur estimée</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (spec of speculationsTable(); track spec.code) {
-                  <tr>
-                    <td>
-                      <div class="spec-cell">
-                        <strong>{{ spec.nom }}</strong>
-                        <span>{{ spec.code }}</span>
-                      </div>
-                    </td>
-                    <td class="align-right">
-                      <span class="prix">{{ spec.prixGarantiKg }} <small>FCFA/kg</small></span>
-                    </td>
-                    <td>
-                      <div class="volume-cell">
-                        <div class="volume-top">
-                          <strong>{{ spec.tonnage | number:'1.0-0' }} t</strong>
-                          <span>{{ spec.partPourcent }}%</span>
-                        </div>
-                        <div class="volume-bar">
-                          <div [style.width.%]="spec.partPourcent"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="align-right">
-                      <span class="montant">{{ formaterMontant(spec.valeurEstimeeCfa) }}</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <a class="todo-item" routerLink="/collectes">
+          <span class="todo-icon icon-collecte"><mat-icon>fact_check</mat-icon></span>
+          <span class="todo-text">
+            <strong>Collectes à examiner</strong>
+            <small>Dossiers synchronisés ou examinés</small>
+          </span>
+          <span class="todo-count" [class.zero]="(donnees()?.kpis?.collectesEnAttente ?? 0) === 0">
+            {{ donnees()?.kpis?.collectesEnAttente ?? 0 }}
+          </span>
+          <mat-icon class="todo-arrow">chevron_right</mat-icon>
+        </a>
+
+        <a class="todo-item" routerLink="/paiements">
+          <span class="todo-icon icon-paiement"><mat-icon>phonelink_lock</mat-icon></span>
+          <span class="todo-text">
+            <strong>Paiements à confirmer</strong>
+            <small>Validation 2FA Mobile Money</small>
+          </span>
+          <span class="todo-count" [class.zero]="(donnees()?.kpis?.paiementsEnAttente ?? 0) === 0">
+            {{ donnees()?.kpis?.paiementsEnAttente ?? 0 }}
+          </span>
+          <mat-icon class="todo-arrow">chevron_right</mat-icon>
+        </a>
+
+        @if (
+        (donnees()?.kpis?.collectesEnAttente ?? 0) === 0 &&
+        (donnees()?.kpis?.paiementsEnAttente ?? 0) === 0
+        ) {
+        <div class="todo-clear">
+          <mat-icon>verified</mat-icon>
+          <span>Aucune action en attente. Tout est à jour.</span>
+        </div>
         }
       </div>
 
-      <div class="side-stack">
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <mat-icon>task_alt</mat-icon>
-              <div>
-                <h3>À traiter</h3>
-                <p>Actions qui vous attendent</p>
-              </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <mat-icon>map</mat-icon>
+            <div>
+              <h3>Répartition par région</h3>
+              <p>Volumes collectés</p>
             </div>
           </div>
-
-          <a class="todo-item" routerLink="/collectes">
-            <span class="todo-icon icon-collecte"><mat-icon>fact_check</mat-icon></span>
-            <span class="todo-text">
-              <strong>Collectes à examiner</strong>
-              <small>Dossiers synchronisés ou examinés</small>
-            </span>
-            <span class="todo-count" [class.zero]="(donnees()?.kpis?.collectesEnAttente ?? 0) === 0">
-              {{ donnees()?.kpis?.collectesEnAttente ?? 0 }}
-            </span>
-            <mat-icon class="todo-arrow">chevron_right</mat-icon>
-          </a>
-
-          <a class="todo-item" routerLink="/paiements">
-            <span class="todo-icon icon-paiement"><mat-icon>phonelink_lock</mat-icon></span>
-            <span class="todo-text">
-              <strong>Paiements à confirmer</strong>
-              <small>Validation 2FA Mobile Money</small>
-            </span>
-            <span class="todo-count" [class.zero]="(donnees()?.kpis?.paiementsEnAttente ?? 0) === 0">
-              {{ donnees()?.kpis?.paiementsEnAttente ?? 0 }}
-            </span>
-            <mat-icon class="todo-arrow">chevron_right</mat-icon>
-          </a>
-
-          @if (
-            (donnees()?.kpis?.collectesEnAttente ?? 0) === 0 &&
-            (donnees()?.kpis?.paiementsEnAttente ?? 0) === 0
-          ) {
-            <div class="todo-clear">
-              <mat-icon>verified</mat-icon>
-              <span>Aucune action en attente. Tout est à jour.</span>
-            </div>
-          }
         </div>
 
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <mat-icon>map</mat-icon>
-              <div>
-                <h3>Répartition par région</h3>
-                <p>Volumes collectés</p>
-              </div>
+        @if (regionsTriees().length === 0) {
+        <div class="panel-empty">
+          <mat-icon>map</mat-icon>
+          <span>Aucune région renseignée.</span>
+        </div>
+        } @else {
+        <div class="regions-list">
+          @for (reg of regionsTriees(); track reg.region) {
+          <div class="region-row">
+            <div class="region-labels">
+              <span>{{ reg.region }}</span>
+              <span>
+                <strong>{{ reg.tonnage | number:'1.0-0' }} t</strong>
+                <small>{{ reg.pourcent }}%</small>
+              </span>
+            </div>
+            <div class="region-bar">
+              <div [style.width.%]="pourcentage(reg.tonnage, maxRegion())"></div>
             </div>
           </div>
-
-          @if (regionsTriees().length === 0) {
-            <div class="panel-empty">
-              <mat-icon>map</mat-icon>
-              <span>Aucune région renseignée.</span>
-            </div>
-          } @else {
-            <div class="regions-list">
-              @for (reg of regionsTriees(); track reg.region) {
-                <div class="region-row">
-                  <div class="region-labels">
-                    <span>{{ reg.region }}</span>
-                    <span>
-                      <strong>{{ reg.tonnage | number:'1.0-0' }} t</strong>
-                      <small>{{ reg.pourcent }}%</small>
-                    </span>
-                  </div>
-                  <div class="region-bar">
-                    <div [style.width.%]="pourcentage(reg.tonnage, maxRegion())"></div>
-                  </div>
-                </div>
-              }
-            </div>
           }
         </div>
+        }
       </div>
-    </section>
+    </div>
+  </section>
   }
 </div>

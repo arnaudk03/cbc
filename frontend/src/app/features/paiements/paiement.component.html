@@ -114,14 +114,23 @@
                   <td class="align-right">{{ formaterMontant(candidat.montant) }}</td>
                   <td>{{ candidat.collecte.operateurMobile }}</td>
                   <td>
-                    <button
-                      mat-flat-button
-                      color="primary"
-                      [disabled]="initEnCours() !== null"
-                      (click)="initier(candidat)">
-                      <mat-icon>send</mat-icon>
-                      Initier
-                    </button>
+                    <div class="action-group">
+                      <button
+                        mat-stroked-button
+                        type="button"
+                        (click)="ouvrirDetailCandidat(candidat)">
+                        <mat-icon>visibility</mat-icon>
+                        Détails
+                      </button>
+                      <button
+                        mat-flat-button
+                        color="primary"
+                        [disabled]="initEnCours() !== null"
+                        (click)="initier(candidat)">
+                        <mat-icon>send</mat-icon>
+                        Initier
+                      </button>
+                    </div>
                   </td>
                 </tr>
               }
@@ -210,6 +219,13 @@
                   </td>
                   <td>
                     <div class="action-group">
+                      <button
+                        mat-stroked-button
+                        type="button"
+                        (click)="ouvrirDetail(paiement)">
+                        <mat-icon>visibility</mat-icon>
+                        Détails
+                      </button>
                       @if (paiement.statut === 'INITIE' && peutValider()) {
                         <button mat-flat-button color="primary" (click)="activer2fa(paiement)">
                           <mat-icon>verified_user</mat-icon>

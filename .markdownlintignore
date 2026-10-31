@@ -1,0 +1,6 @@
+.trivyignore
+**/.trivyignore
+node_modules
+target
+dist
+

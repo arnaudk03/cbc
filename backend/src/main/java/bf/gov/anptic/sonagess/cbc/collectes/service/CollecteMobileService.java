@@ -18,7 +18,6 @@ import bf.gov.anptic.sonagess.cbc.common.BusinessException;
 import bf.gov.anptic.sonagess.cbc.common.MontantEnLettres;
 import bf.gov.anptic.sonagess.cbc.common.PageResponse;
 import bf.gov.anptic.sonagess.cbc.common.ResourceNotFoundException;
-import bf.gov.anptic.sonagess.cbc.equipements.domain.TabletteDevice;
 import bf.gov.anptic.sonagess.cbc.equipements.repository.TabletteDeviceRepository;
 import bf.gov.anptic.sonagess.cbc.notifications.domain.TypeNotification;
 import bf.gov.anptic.sonagess.cbc.notifications.service.NotificationService;
@@ -38,12 +37,10 @@ import bf.gov.anptic.sonagess.cbc.referentiels.repository.PrixGarantieRepository
 import bf.gov.anptic.sonagess.cbc.referentiels.repository.ProducteurRepository;
 import bf.gov.anptic.sonagess.cbc.referentiels.repository.SpeculationRepository;
 import bf.gov.anptic.sonagess.cbc.referentiels.service.ReferentielService;
-import bf.gov.anptic.sonagess.cbc.security.Roles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -530,7 +527,6 @@ public class CollecteMobileService {
         long synchro = 0;
         long examine = 0;
         long valide = 0;
-        long paye = 0;
         long rejete = 0;
 
         Set<Long> bordereauxVus = new HashSet<>();

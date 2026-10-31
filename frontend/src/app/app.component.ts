@@ -199,6 +199,10 @@ export class AppComponent {
     () => !this.surPageConnexion() && this.auth.user() !== null
   );
 
+  readonly peutSaisirPesee = computed(() =>
+    this.auth.possedeUnRole('ADMIN', 'AGENT_COLLECTEUR', 'CHEF_COMPTOIR')
+  );
+
   readonly menusVisibles = computed(() => {
     const roles = this.auth.roles();
     return MENUS.filter((menu) => roles.some((role) => menu.roles.includes(role)));
@@ -263,14 +267,13 @@ export class AppComponent {
       return;
     }
 
-    // Raccourci 'N' : Nouvelle saisie collecte (si pas dans un champ texte)
+    // Raccourci 'N' : Nouvelle saisie collecte (strictement restreint aux agents habilités)
     if (
       event.key.toLowerCase() === 'n' &&
       !this.paletteOuverte() &&
       !this.estDansUnChampEditable(event)
     ) {
-      const peutSaisir = this.menusVisibles().some((m) => m.route === '/collectes');
-      if (peutSaisir) {
+      if (this.peutSaisirPesee()) {
         event.preventDefault();
         this.router.navigate(['/collectes']);
       }

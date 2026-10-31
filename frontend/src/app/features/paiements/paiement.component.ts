@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -12,6 +13,7 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { Collecte } from '../collectes/collecte.models';
 import { CollecteService } from '../collectes/collecte.service';
+import { PaiementDetailDialogComponent } from './paiement-detail-dialog.component';
 import {
   Paiement,
   PaiementStatut,
@@ -39,7 +41,8 @@ interface CandidatPaiement {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatDialogModule
   ],
   templateUrl: './paiement.component.html',
   styleUrl: './paiement.component.scss'
@@ -48,6 +51,7 @@ export class PaiementComponent implements OnInit {
   private readonly paiementService = inject(PaiementService);
   private readonly collecteService = inject(CollecteService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   readonly auth = inject(AuthService);
 
   readonly chargement = signal(true);
@@ -200,6 +204,61 @@ export class PaiementComponent implements OnInit {
         this.charger();
       },
       error: (erreur) => this.notifier(this.messageErreur(erreur))
+    });
+  }
+
+  ouvrirDetail(paiement: Paiement): void {
+    const ref = this.dialog.open(PaiementDetailDialogComponent, {
+      data: {
+        paiement,
+        peutValider: this.peutValider(),
+        peutRejeter: this.peutRejeter()
+      },
+      width: '680px',
+      maxWidth: '95vw',
+      autoFocus: false
+    });
+
+    ref.afterClosed().subscribe((res) => {
+      if (!res) return;
+      if (res.action === 'valider2fa' && res.paiement) {
+        this.activer2fa(res.paiement);
+      } else if (res.action === 'rejeter' && res.paiement) {
+        this.rejeter(res.paiement);
+      }
+    });
+  }
+
+  ouvrirDetailCandidat(candidat: CandidatPaiement): void {
+    const ref = this.dialog.open(PaiementDetailDialogComponent, {
+      data: {
+        candidat: {
+          collecte: {
+            id: candidat.collecte.id,
+            referenceLot: candidat.collecte.referenceLot,
+            producteurNom: candidat.collecte.producteurNom,
+            producteurTelephone: candidat.collecte.telephoneProducteur,
+            comptoirNom: candidat.collecte.comptoirNom,
+            campagneCode: candidat.collecte.campagneCode,
+            speculationNom: candidat.collecte.speculationNom,
+            poidsNetKg: candidat.collecte.quantiteKg,
+            prixUnitaireCfa: candidat.collecte.prixUnitaireKg,
+            operateurMobile: candidat.collecte.operateurMobile
+          },
+          numeroBrbc: candidat.numeroBrbc,
+          nombreLots: candidat.nombreLots,
+          montant: candidat.montant
+        }
+      },
+      width: '680px',
+      maxWidth: '95vw',
+      autoFocus: false
+    });
+
+    ref.afterClosed().subscribe((res) => {
+      if (res?.action === 'initier') {
+        this.initier(candidat);
+      }
     });
   }
 

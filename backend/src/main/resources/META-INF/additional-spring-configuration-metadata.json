@@ -1,0 +1,90 @@
+{
+  "properties": [
+    {
+      "name": "application.bootstrap.admin.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Activer l'initialisation automatique du compte administrateur racine CBC au démarrage."
+    },
+    {
+      "name": "application.bootstrap.admin.matricule",
+      "type": "java.lang.String",
+      "description": "Matricule de l'administrateur racine."
+    },
+    {
+      "name": "application.bootstrap.admin.nom",
+      "type": "java.lang.String",
+      "description": "Nom de famille de l'administrateur racine."
+    },
+    {
+      "name": "application.bootstrap.admin.prenom",
+      "type": "java.lang.String",
+      "description": "Prénom de l'administrateur racine."
+    },
+    {
+      "name": "application.bootstrap.admin.email",
+      "type": "java.lang.String",
+      "description": "Email professionnel de l'administrateur racine."
+    },
+    {
+      "name": "application.bootstrap.admin.telephone",
+      "type": "java.lang.String",
+      "description": "Numéro de téléphone de l'administrateur racine."
+    },
+    {
+      "name": "application.bootstrap.admin.mot-de-passe",
+      "type": "java.lang.String",
+      "description": "Mot de passe initial du compte administrateur racine."
+    },
+    {
+      "name": "application.security.jwt.secret-key",
+      "type": "java.lang.String",
+      "description": "Clé secrète HMAC-SHA pour la signature des jetons JWT."
+    },
+    {
+      "name": "application.security.jwt.access-token-expiration",
+      "type": "java.lang.Long",
+      "description": "Durée de validité du token d'accès en millisecondes."
+    },
+    {
+      "name": "application.security.jwt.refresh-token-expiration",
+      "type": "java.lang.Long",
+      "description": "Durée de validité du refresh token en millisecondes."
+    },
+    {
+      "name": "application.security.otp.expiration-minutes",
+      "type": "java.lang.Integer",
+      "description": "Durée de validité d'un code OTP SMS/Mail en minutes."
+    },
+    {
+      "name": "application.security.otp.max-attempts",
+      "type": "java.lang.Integer",
+      "description": "Nombre maximal de tentatives de validation du code OTP."
+    },
+    {
+      "name": "application.security.otp.demo-mode",
+      "type": "java.lang.Boolean",
+      "description": "Mode démonstration : utilise un code OTP fixe pour faciliter les tests hors-ligne."
+    },
+    {
+      "name": "application.security.max-login-attempts",
+      "type": "java.lang.Integer",
+      "description": "Nombre maximal d'échecs de connexion avant verrouillage temporaire."
+    },
+    {
+      "name": "application.cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "Origines autorisées pour les requêtes CORS (séparées par des virgules)."
+    },
+    {
+      "name": "application.cors.allowed-methods",
+      "type": "java.lang.String",
+      "description": "Méthodes HTTP autorisées par la politique CORS."
+    },
+    {
+      "name": "application.cors.allowed-headers",
+      "type": "java.lang.String",
+      "description": "En-têtes HTTP autorisés par la politique CORS."
+    }
+  ]
+}
+

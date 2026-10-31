@@ -57,6 +57,8 @@ spring:
           auth: false
           starttls:
             enable: false
+          ssl:
+            checkserveridentity: true
 
 # Configuration JWT & Sécurité CBC
 application:

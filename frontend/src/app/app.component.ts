@@ -79,6 +79,26 @@ const MENUS: MenuItem[] = [
     roles: ['ADMIN', 'DCT', 'DGSA', 'SGS', 'MAGASINIER', 'AGENT_COLLECTEUR', 'CHEF_COMPTOIR', 'DPL']
   },
   {
+    route: '/statistiques',
+    label: 'Statistiques & Décisionnel',
+    icon: 'analytics',
+    roles: [
+      'ADMIN',
+      'DCT',
+      'SCP',
+      'DFC_DIRECTEUR',
+      'SFB_INITIATEUR',
+      'COMPTABILITE',
+      'DGSA',
+      'SGS',
+      'MAGASINIER',
+      'AGENT_COLLECTEUR',
+      'CHEF_COMPTOIR',
+      'DPL',
+      'CONSULTATION'
+    ]
+  },
+  {
     route: '/referentiels',
     label: 'Paramétrage',
     icon: 'tune',
@@ -128,6 +148,27 @@ const ACTIONS_PALETTE: ActionPalette[] = [
     description: 'Tableaux de bord des tonnages nationaux, prix garantis et alertes terrain',
     icon: 'dashboard',
     route: '/dashboard'
+  },
+  {
+    label: 'Statistiques & Pilotage Stratégique',
+    description: 'Consulter les agrégats de campagne, volumes, décaissements et qualité',
+    icon: 'analytics',
+    route: '/statistiques',
+    roles: [
+      'ADMIN',
+      'DCT',
+      'SCP',
+      'DFC_DIRECTEUR',
+      'SFB_INITIATEUR',
+      'COMPTABILITE',
+      'DGSA',
+      'SGS',
+      'MAGASINIER',
+      'AGENT_COLLECTEUR',
+      'CHEF_COMPTOIR',
+      'DPL',
+      'CONSULTATION'
+    ]
   },
   {
     label: 'Paramétrage des Campagnes & Prix',

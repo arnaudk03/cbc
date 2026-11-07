@@ -20,6 +20,16 @@ public interface BordereauReceptionBrbcRepository extends JpaRepository<Borderea
     long countByStatutValidation(StatutValidationBrbc statut);
 
     @Query("""
+            select count(distinct b.id)
+            from BordereauReceptionBrbc b
+            join b.collectes c
+            where b.statutValidation = :statut
+              and (:comptoirId is null or c.comptoir.id = :comptoirId)
+            """)
+    long countByStatutValidationEtComptoir(@Param("statut") StatutValidationBrbc statut,
+                                           @Param("comptoirId") Long comptoirId);
+
+    @Query("""
             select coalesce(sum(b.montantNetPayerCfa), 0)
             from BordereauReceptionBrbc b
             where b.statutValidation = :statut

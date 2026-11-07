@@ -1,0 +1,462 @@
+<div class="sp">
+
+  @if (chargement()) {
+    <div class="sp-loader"><mat-progress-bar mode="indeterminate"></mat-progress-bar></div>
+  }
+
+  <!-- ══ BANDEAU SUPÉRIEUR ══════════════════════════════════════════════════ -->
+  <div class="sp-topbar no-print">
+    <div class="sp-topbar__left">
+      <span class="sp-topbar__eyebrow">SONAGESS · Burkina Faso</span>
+      <h1 class="sp-topbar__title">Pilotage Collecte Bord Champ</h1>
+    </div>
+    <div class="sp-topbar__right">
+      <button mat-icon-button [disabled]="chargement()" (click)="charger()" matTooltip="Actualiser">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button [disabled]="chargementExport() || chargement()" (click)="exporterCsv()" matTooltip="Exporter CSV">
+        <mat-icon>file_download</mat-icon>
+      </button>
+      <button mat-icon-button [disabled]="chargement()" (click)="imprimer()" matTooltip="Imprimer">
+        <mat-icon>print</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ ERREUR ══════════════════════════════════════════════════════════════ -->
+  @if (erreur(); as msg) {
+    <div class="sp-error">
+      <mat-icon>cloud_off</mat-icon>
+      <span>{{ msg }}</span>
+      <button mat-stroked-button (click)="charger()">Réessayer</button>
+    </div>
+  }
+
+  <!-- ══ FILTRES COMPACTS ════════════════════════════════════════════════════ -->
+  <div class="sp-filters no-print">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Campagne</mat-label>
+      <mat-select [(ngModel)]="filtreCampagneId" (selectionChange)="appliquerFiltres()">
+        @for (c of campagnes(); track c.id) {
+          <mat-option [value]="c.id">{{ c.code }} — {{ c.libelle }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Région</mat-label>
+      <mat-select [(ngModel)]="filtreRegionId" (selectionChange)="appliquerFiltres()">
+        <mat-option [value]="null">Toutes</mat-option>
+        @for (r of regions(); track r.id) {
+          <mat-option [value]="r.id">{{ r.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Comptoir</mat-label>
+      <mat-select [(ngModel)]="filtreComptoirId" (selectionChange)="appliquerFiltres()">
+        <mat-option [value]="null">Tous</mat-option>
+        @for (co of comptoirsFiltres(); track co.id) {
+          <mat-option [value]="co.id">{{ co.code }} — {{ co.nom }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Spéculation</mat-label>
+      <mat-select [(ngModel)]="filtreSpeculationId" (selectionChange)="appliquerFiltres()">
+        <mat-option [value]="null">Toutes</mat-option>
+        @for (s of speculations(); track s.id) {
+          <mat-option [value]="s.id">{{ s.code }} — {{ s.nom }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Début</mat-label>
+      <input matInput type="date" [(ngModel)]="filtreDateDebut" (change)="appliquerFiltres()" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Fin</mat-label>
+      <input matInput type="date" [(ngModel)]="filtreDateFin" (change)="appliquerFiltres()" />
+    </mat-form-field>
+
+    <button mat-icon-button (click)="reinitialiserFiltres()" matTooltip="Réinitialiser">
+      <mat-icon>filter_alt_off</mat-icon>
+    </button>
+  </div>
+
+  @if (donnees(); as data) {
+
+    <!-- ══ HERO : Campagne + KPI primaires ════════════════════════════════ -->
+    @if (data.campagne; as c) {
+      <div class="sp-hero">
+
+        <!-- Campagne info -->
+        <div class="sp-hero__identity">
+          <div class="sp-hero__flag">
+            <span class="sp-hero__flag-r"></span>
+            <span class="sp-hero__flag-y"></span>
+            <span class="sp-hero__flag-g"></span>
+          </div>
+          <div>
+            <div class="sp-hero__campaign-code">
+              <span class="dot-live"></span>{{ c.code }}
+              <span class="sp-hero__badge">{{ c.statut }}</span>
+            </div>
+            <div class="sp-hero__campaign-name">{{ c.libelle }}</div>
+            <div class="sp-hero__dates">
+              <mat-icon>calendar_today</mat-icon>
+              {{ formaterDate(c.dateDebut) }}&nbsp;→&nbsp;{{ formaterDate(c.dateFin) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Progression (grande) -->
+        <div class="sp-hero__progress">
+          <div class="sp-hero__pct-num">{{ data.kpis.tauxRealisation }}<sup>%</sup></div>
+          <div class="sp-hero__pct-label">de l'objectif national atteint</div>
+          <div class="sp-hero__bar">
+            <div class="sp-hero__bar-fill" [style.width.%]="data.kpis.tauxRealisation"></div>
+          </div>
+          <div class="sp-hero__bar-legend">
+            <span><strong>{{ formaterNombre(data.kpis.collecteTonnes) }} t</strong> collectés</span>
+            <span>Objectif&nbsp;: <strong>{{ formaterNombre(data.kpis.objectifTonnes) }} t</strong></span>
+          </div>
+        </div>
+
+        <!-- Volume (primaire) -->
+        <div class="sp-hero__vol">
+          <div class="sp-hero__vol-num">{{ formaterNombre(data.kpis.collecteTonnes) }}</div>
+          <div class="sp-hero__vol-unit">Tonnes collectées</div>
+        </div>
+
+      </div>
+    }
+
+    <!-- ══ BARRE DE MÉTRIQUES SECONDAIRES ════════════════════════════════ -->
+    <div class="sp-metrics">
+
+      <div class="sp-metric sp-metric--blue">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <div class="sp-metric__body">
+          <div class="sp-metric__val">{{ formaterMontant(data.kpis.montantTotalNetCfa) }}</div>
+          <div class="sp-metric__lbl">Montant net engagé</div>
+        </div>
+      </div>
+
+      <div class="sp-sep"></div>
+
+      <div class="sp-metric sp-metric--amber">
+        <mat-icon>payments</mat-icon>
+        <div class="sp-metric__body">
+          <div class="sp-metric__val">{{ formaterMontant(data.kpis.montantDecaisseCfa) }}</div>
+          <div class="sp-metric__lbl">Décaissé Mobile Money · {{ data.kpis.tauxDecaissement }}%</div>
+        </div>
+      </div>
+
+      <div class="sp-sep"></div>
+
+      <div class="sp-metric">
+        <mat-icon>groups</mat-icon>
+        <div class="sp-metric__body">
+          <div class="sp-metric__val">{{ data.kpis.producteursUniques }}</div>
+          <div class="sp-metric__lbl">Producteurs · {{ data.kpis.comptoirsActifs }} comptoir(s)</div>
+        </div>
+      </div>
+
+      <div class="sp-sep"></div>
+
+      <div class="sp-metric">
+        <mat-icon>receipt_long</mat-icon>
+        <div class="sp-metric__body">
+          <div class="sp-metric__val">{{ data.kpis.brbcValides }} <span class="sp-metric__sub">/ {{ data.kpis.brbcEmis }}</span></div>
+          <div class="sp-metric__lbl">BRBC validés · {{ data.kpis.lotsCollectes }} lots</div>
+        </div>
+      </div>
+
+      <div class="sp-sep"></div>
+
+      <div class="sp-metric" [ngClass]="data.kpis.tauxConformite >= 90 ? 'sp-metric--green' : 'sp-metric--red'">
+        <mat-icon>verified</mat-icon>
+        <div class="sp-metric__body">
+          <div class="sp-metric__val">{{ data.kpis.tauxConformite }}%</div>
+          <div class="sp-metric__lbl">Conformité SONAGESS</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ ONGLETS D'ANALYSE ══════════════════════════════════════════════ -->
+    <mat-tab-group animationDuration="150ms" class="sp-tabs">
+
+      <!-- 1 · SPÉCULATIONS ─────────────────────────────────────────── -->
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon>grain</mat-icon> Spéculations</ng-template>
+
+        <div class="sp-pane">
+          <div class="sp-pane__hd">
+            <div>
+              <h2>Volumes &amp; cotations par spéculation</h2>
+              <p>Répartition des tonnages, valorisation financière et qualité.</p>
+            </div>
+            <span class="sp-chip">{{ data.speculations.length }}</span>
+          </div>
+
+          @if (data.speculations.length === 0) {
+            <div class="sp-empty"><mat-icon>inventory_2</mat-icon><span>Aucune donnée.</span></div>
+          } @else {
+            <div class="sp-table-wrap">
+              <table class="sp-table">
+                <thead><tr>
+                  <th>Spéculation</th>
+                  <th class="r">Volume (t)</th>
+                  <th>Part nationale</th>
+                  <th class="r">Valeur nette</th>
+                  <th class="r">Prix moy.</th>
+                  <th class="r">Humidité</th>
+                  <th class="c">Conformité</th>
+                </tr></thead>
+                <tbody>
+                  @for (s of data.speculations; track s.code) {
+                    <tr>
+                      <td>
+                        <span class="sp-name">{{ s.nom }}</span>
+                        <span class="sp-sub">{{ s.code }} · {{ s.nombreLots }} lot(s)</span>
+                      </td>
+                      <td class="r sp-num--primary">{{ formaterNombre(s.tonnage) }}</td>
+                      <td>
+                        <div class="sp-bar-row">
+                          <span class="sp-bar-pct">{{ s.partPourcent }}%</span>
+                          <div class="sp-bar"><div class="sp-bar__fill sp-bar__fill--blue" [style.width.%]="pourcentage(s.tonnage, maxSpecTonnage())"></div></div>
+                        </div>
+                      </td>
+                      <td class="r sp-num--green">{{ formaterMontant(s.montantCfa) }}</td>
+                      <td class="r sp-num--muted">{{ s.prixMoyenKg }} <small>CFA/kg</small></td>
+                      <td class="r" [class.sp-num--danger]="s.humiditeMoyenne > s.seuilHumiditeMax">{{ s.humiditeMoyenne }}% <small>(≤{{ s.seuilHumiditeMax }})</small></td>
+                      <td class="c">
+                        <span class="sp-badge" [ngClass]="s.tauxConformite >= 90 ? 'ok' : s.tauxConformite >= 75 ? 'warn' : 'err'">{{ s.tauxConformite }}%</span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- 2 · RÉGIONS ─────────────────────────────────────────────── -->
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon>map</mat-icon> Régions</ng-template>
+
+        <div class="sp-pane">
+          <div class="sp-pane__hd">
+            <div>
+              <h2>Déploiement territorial</h2>
+              <p>Performance par bassin de production et classement des comptoirs ruraux.</p>
+            </div>
+            <span class="sp-chip">{{ data.regions.length }} rég.</span>
+          </div>
+
+          <div class="sp-split">
+            <!-- Régions -->
+            <div class="sp-split__col">
+              <p class="sp-col-label">Classement régions</p>
+              @for (r of data.regions; track r.region) {
+                <div class="sp-region">
+                  <div class="sp-region__top">
+                    <span class="sp-region__name">{{ r.region }}</span>
+                    <strong class="sp-num--green">{{ formaterNombre(r.tonnage) }} t</strong>
+                  </div>
+                  <div class="sp-bar sp-bar--full">
+                    <div class="sp-bar__fill sp-bar__fill--green" [style.width.%]="pourcentage(r.tonnage, maxRegionTonnage())"></div>
+                  </div>
+                  <div class="sp-region__bot">
+                    <span>{{ r.nombreComptoirs }} comptoir(s) · {{ r.nombreLots }} lots · {{ r.partPourcent }}%</span>
+                    <span class="sp-num--green">{{ formaterMontant(r.montantCfa) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Comptoirs -->
+            <div class="sp-split__col">
+              <p class="sp-col-label">Top comptoirs ruraux</p>
+              <div class="sp-table-wrap">
+                <table class="sp-table">
+                  <thead><tr>
+                    <th>Comptoir</th>
+                    <th>Région</th>
+                    <th class="r">Tonnage</th>
+                    <th class="r">Prod.</th>
+                  </tr></thead>
+                  <tbody>
+                    @for (co of data.comptoirs; track co.code) {
+                      <tr>
+                        <td><span class="sp-name">{{ co.nom }}</span><span class="sp-sub">{{ co.code }}</span></td>
+                        <td class="sp-num--muted">{{ co.region || '—' }}</td>
+                        <td class="r sp-num--primary">{{ formaterNombre(co.tonnage) }} t</td>
+                        <td class="r">{{ co.nombreProducteurs }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- 3 · MOBILE MONEY ─────────────────────────────────────────── -->
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon>payments</mat-icon> Mobile Money</ng-template>
+
+        <div class="sp-pane">
+          <div class="sp-pane__hd">
+            <div>
+              <h2>Décaissements par opérateur</h2>
+              <p>Flux réglés aux producteurs via portefeuille électronique sécurisé.</p>
+            </div>
+          </div>
+
+          <div class="sp-ops">
+            @for (op of data.operateurs; track op.operateur) {
+              <div class="sp-op">
+                <div class="sp-op__header">
+                  <div class="sp-op__icon"><mat-icon>phone_android</mat-icon></div>
+                  <div class="sp-op__name">
+                    <strong>{{ op.operateur }}</strong>
+                    <small>{{ op.nombrePaiements }} paiements</small>
+                  </div>
+                  <span class="sp-op__share">{{ op.partPourcent }}<sup>%</sup></span>
+                </div>
+                <div class="sp-op__row">
+                  <span>Décaissé</span>
+                  <strong class="sp-num--green">{{ formaterMontant(op.montantConfirmeCfa) }}</strong>
+                </div>
+                <div class="sp-op__row">
+                  <span>Engagé</span>
+                  <span>{{ formaterMontant(op.montantTotalCfa) }}</span>
+                </div>
+                <div class="sp-op__success">
+                  <div class="sp-op__success-labels">
+                    <span>Taux de succès passerelle</span>
+                    <strong>{{ op.tauxSucces }}%</strong>
+                  </div>
+                  <div class="sp-bar sp-bar--full">
+                    <div class="sp-bar__fill sp-bar__fill--amber" [style.width.%]="op.tauxSucces"></div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- 4 · QUALITÉ ──────────────────────────────────────────────── -->
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon>fact_check</mat-icon> Qualité</ng-template>
+
+        <div class="sp-pane">
+          <div class="sp-pane__hd">
+            <div>
+              <h2>Bilan qualité &amp; normes céréalières</h2>
+              <p>Humidité, pureté physique et grains avariés.</p>
+            </div>
+          </div>
+
+          <div class="sp-quality">
+            <div class="sp-qrow">
+
+              <div class="sp-qstat sp-qstat--teal">
+                <div class="sp-qstat__num">{{ data.qualite.lotsControles }}</div>
+                <div class="sp-qstat__label">Lots contrôlés</div>
+                <div class="sp-qstat__detail">
+                  <span class="ok-dot"></span>{{ data.qualite.lotsConformes }} conformes
+                  <span class="err-dot"></span>{{ data.qualite.lotsNonConformes }} rejetés
+                </div>
+              </div>
+
+              <div class="sp-qstat sp-qstat--blue">
+                <div class="sp-qstat__num">{{ data.qualite.humiditeMoyenne }}<sup>%</sup></div>
+                <div class="sp-qstat__label">Humidité moyenne</div>
+                <div class="sp-qstat__detail">Seuil SONAGESS ≤ 14,0%</div>
+              </div>
+
+              <div class="sp-qstat sp-qstat--amber">
+                <div class="sp-qstat__num">{{ data.qualite.impuretesMoyennes }}<sup>%</sup></div>
+                <div class="sp-qstat__label">Impuretés</div>
+                <div class="sp-qstat__detail">Corps étrangers / poussières</div>
+              </div>
+
+              <div class="sp-qstat sp-qstat--red">
+                <div class="sp-qstat__num">{{ data.qualite.grainsAvariesMoyens }}<sup>%</sup></div>
+                <div class="sp-qstat__label">Grains avariés</div>
+                <div class="sp-qstat__detail">Brisures / moisissures</div>
+              </div>
+
+            </div>
+
+            @if (data.qualite.motifsRejet.length > 0) {
+              <div class="sp-motifs">
+                <div class="sp-motifs__title"><mat-icon>warning</mat-icon> Motifs de non-conformité</div>
+                @for (m of data.qualite.motifsRejet; track m.motif) {
+                  <div class="sp-motif">
+                    <mat-icon>remove_circle_outline</mat-icon>
+                    <span>{{ m.motif }}</span>
+                    <strong>{{ m.occurrences }} cas</strong>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- 5 · ÉVOLUTION ────────────────────────────────────────────── -->
+      <mat-tab>
+        <ng-template mat-tab-label><mat-icon>show_chart</mat-icon> Évolution</ng-template>
+
+        <div class="sp-pane">
+          <div class="sp-pane__hd">
+            <div>
+              <h2>Rythme de collecte &amp; décaissement</h2>
+              <p>Progression mensuelle des tonnages bord champ.</p>
+            </div>
+          </div>
+
+          @if (data.evolution.length === 0) {
+            <div class="sp-empty"><mat-icon>show_chart</mat-icon><span>Aucune donnée temporelle.</span></div>
+          } @else {
+            <div class="sp-table-wrap">
+              <table class="sp-table">
+                <thead><tr>
+                  <th>Période</th>
+                  <th class="r">Volume (t)</th>
+                  <th class="r">Montant engagé</th>
+                  <th class="r">Lots</th>
+                </tr></thead>
+                <tbody>
+                  @for (ev of data.evolution; track ev.periode) {
+                    <tr>
+                      <td><strong>{{ ev.periode }}</strong></td>
+                      <td class="r sp-num--primary">{{ formaterNombre(ev.tonnage) }}</td>
+                      <td class="r">{{ formaterMontant(ev.montantCfa) }}</td>
+                      <td class="r sp-num--muted">{{ ev.nombreCollectes }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+
+  }
+
+</div>

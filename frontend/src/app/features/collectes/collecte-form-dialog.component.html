@@ -1,0 +1,353 @@
+<div class="dialog-header">
+  <div class="header-branding">
+    <div class="brbc-republique">
+      <small>BURKINA FASO · MINISTÈRE DE L'AGRICULTURE ET DES RESSOURCES ANIMALES</small>
+      <small>SONAGESS · Société Nationale de Gestion du Stock de Sécurité Alimentaire</small>
+    </div>
+    <div class="header-titre-wrap">
+      <div class="header-icon">
+        <mat-icon>add_shopping_cart</mat-icon>
+      </div>
+      <div>
+        <h2 mat-dialog-title>Nouvelle Collecte Bord Champ</h2>
+        <span class="header-sub">Émission d'un Bordereau de Réception BRBC multi-spéculations</span>
+      </div>
+    </div>
+  </div>
+  <button mat-icon-button class="btn-fermer" (click)="fermer()" aria-label="Fermer">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+@if (chargement()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+<mat-dialog-content class="dialog-content">
+  @if (erreur(); as message) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ message }}</span>
+    </div>
+  }
+
+  @if (sansComptoir()) {
+    <div class="error-banner" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>Aucun comptoir ne vous est affecté. Contactez l’administrateur pour rattacher votre compte à un comptoir.</span>
+    </div>
+  }
+
+  <!-- CADRAN DIGITAL DE BASCULE EN DIRECT (TOTAUX) -->
+  <div class="scale-terminal-box">
+    <div class="scale-terminal-header">
+      <div class="scale-indicator-dot"></div>
+      <span>Récapitulatif du bordereau de pesée</span>
+    </div>
+
+    <div class="scale-terminal-grid">
+      <div class="scale-metric">
+        <span class="scale-label">Nombre de Lignes</span>
+        <span class="scale-val">{{ lignesPesee().length }}</span>
+        <small class="scale-sub">Spéculation(s) sur ce BRBC</small>
+      </div>
+
+      <div class="scale-metric">
+        <span class="scale-label">Total Sacs</span>
+        <span class="scale-val">{{ totalSacsLignes() }}</span>
+        <small class="scale-sub">Emballages standard</small>
+      </div>
+
+      <div class="scale-metric scale-main-metric">
+        <span class="scale-label">Poids Net Cumulé</span>
+        <span class="scale-val-main">{{ totalPoidsNetLignes() | number:'1.0-2' }} <small>kg</small></span>
+        <small class="scale-sub">Somme de toutes les bascules</small>
+      </div>
+
+      <div class="scale-metric scale-money-metric">
+        <span class="scale-label">Net à Payer Producteur</span>
+        <span class="scale-val-money">{{ totalMontantLignes() | number:'1.0-0' }} <small>FCFA</small></span>
+        <small class="scale-sub">Total toutes spéculations</small>
+      </div>
+    </div>
+
+    @if (nbLignesNonConformes() > 0) {
+      <div class="scale-quality-banner banner-danger">
+        <mat-icon>warning</mat-icon>
+        <div class="banner-text">
+          <strong>ATTENTION : {{ nbLignesNonConformes() }} ligne(s) non conforme(s) ou hors-seuil qualité.</strong>
+        </div>
+      </div>
+    } @else if (lignesPesee().length > 0) {
+      <div class="scale-quality-banner">
+        <mat-icon>verified</mat-icon>
+        <div class="banner-text">
+          <span>Toutes les lignes respectent les seuils qualité SONAGESS.</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <form [formGroup]="formulaire" id="collecteForm" (ngSubmit)="enregistrer()">
+    <div class="form-grid">
+      <div class="form-section-title">1. Contexte de la collecte</div>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Campagne Céréalière</mat-label>
+        <mat-select
+          formControlName="campagneId"
+          (selectionChange)="changerCampagne($event.value)">
+          @for (campagne of campagnes(); track campagne.id) {
+            <mat-option [value]="campagne.id">
+              {{ campagne.code }} — {{ campagne.libelle }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Comptoir réceptionnaire</mat-label>
+        <mat-select formControlName="comptoirId">
+          @for (comptoir of comptoirs(); track comptoir.id) {
+            <mat-option [value]="comptoir.id">
+              {{ comptoir.code }} — {{ comptoir.nom }} ({{ comptoir.regionNom || 'Région' }})
+            </mat-option>
+          }
+        </mat-select>
+        @if (comptoirAffecte()) {
+          <mat-icon matSuffix matTooltip="Votre comptoir d'affectation — non modifiable">lock</mat-icon>
+        }
+      </mat-form-field>
+
+      <div class="producteur-picker-row full-width">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flex-grow">
+          <mat-label>Producteur vendeur</mat-label>
+          <mat-select formControlName="producteurId">
+            @for (producteur of producteurs(); track producteur.id) {
+              <mat-option [value]="producteur.id">
+                {{ producteur.nomPrenom }} · {{ producteur.telephoneMobileMoney }} ({{ producteur.operateurMobile }})
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (peutGererProducteurs()) {
+          <button
+            mat-stroked-button
+            type="button"
+            class="btn-new-producteur"
+            (click)="ouvrirCreationProducteur()">
+            <mat-icon>person_add</mat-icon>
+            Nouveau producteur
+          </button>
+        }
+      </div>
+
+      @if (producteurSelectionne(); as p) {
+        <div class="producteur-fiche-inline full-width">
+          <div class="fiche-icon"><mat-icon>badge</mat-icon></div>
+          <div class="fiche-info">
+            <span class="fiche-nom">{{ p.nomPrenom }}</span>
+            <span class="fiche-detail">
+              Tél: <strong>{{ p.telephoneMobileMoney }}</strong> ({{ p.operateurMobile }}) · CNIB: <strong>{{ p.cnibNumero }}</strong>
+              @if (p.localityNom) {
+                · Localité: <strong>{{ p.localityNom }}</strong>
+              }
+            </span>
+          </div>
+          <span class="status-chip succes">Identité vérifiée</span>
+        </div>
+      }
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Mode de règlement</mat-label>
+        <mat-select formControlName="modePaiement">
+          <mat-option value="MOBILE_MONEY">Mobile Money (Orange / Moov / Telecel)</mat-option>
+          <mat-option value="VIREMENT_BANCAIRE">Virement bancaire / Trésor</mat-option>
+          <mat-option value="ESPECES">Espèces (Régie d'avance)</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Observations réceptionnaire (facultatif)</mat-label>
+        <input matInput formControlName="observationsReceptionnaire" placeholder="Ex: Livraison directe par groupement villageois" />
+      </mat-form-field>
+    </div>
+
+    <!-- LIGNES DE PESÉE ET QUALITÉ -->
+    <div class="lignes-section">
+      <div class="lignes-section-header">
+        <div class="form-section-title">2. Lignes de pesée & Contrôle qualité</div>
+        <span class="cell-sub">Chaque ligne génère un lot distinct sous le même bordereau BRBC</span>
+      </div>
+
+      @for (ligne of lignesPesee(); track $index; let i = $index) {
+        <div class="ligne-card" [class.ligne-invalide]="!ligne.conforme || qualiteAlerteLigne(ligne)">
+          <div class="ligne-card-header">
+            <div class="ligne-title">
+              <span class="ligne-num">Ligne {{ i + 1 }}</span>
+              <strong class="ligne-spec-nom">
+                {{ speculationDeLigne(ligne)?.nom || 'Sélectionnez une spéculation' }}
+              </strong>
+            </div>
+            <div class="ligne-header-actions">
+              <div class="ligne-prix-badge">
+                <span>Prix garanti :</span>
+                <strong>{{ prixUnitaireLigne(ligne) | number:'1.0-0' }} FCFA/kg</strong>
+              </div>
+              @if (lignesPesee().length > 1) {
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  matTooltip="Supprimer cette ligne"
+                  (click)="supprimerLigne(i)">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="ligne-form-grid">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Spéculation</mat-label>
+              <mat-select
+                [value]="ligne.speculationId"
+                (selectionChange)="mettreAJourLigne(i, 'speculationId', $event.value)">
+                @for (spec of speculations(); track spec.id) {
+                  <mat-option [value]="spec.id">
+                    {{ spec.code }} — {{ spec.nom }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Nombre de sacs</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                [value]="ligne.nombreSacs"
+                (input)="mettreAJourLigne(i, 'nombreSacs', +($any($event.target).value))" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Poids brut (kg)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.01"
+                [value]="ligne.poidsBrutTotalKg"
+                (input)="mettreAJourLigne(i, 'poidsBrutTotalKg', +($any($event.target).value))" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Tare emballage (kg)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.01"
+                [value]="ligne.tareEmballageKg"
+                (input)="mettreAJourLigne(i, 'tareEmballageKg', +($any($event.target).value))" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Humidité (%)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.1"
+                [value]="ligne.tauxHumidite"
+                (input)="mettreAJourLigne(i, 'tauxHumidite', +($any($event.target).value))" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Impuretés (%)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.1"
+                [value]="ligne.tauxImpuretes"
+                (input)="mettreAJourLigne(i, 'tauxImpuretes', +($any($event.target).value))" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Grains avariés (%)</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.1"
+                [value]="ligne.grainsAvaries"
+                (input)="mettreAJourLigne(i, 'grainsAvaries', +($any($event.target).value))" />
+            </mat-form-field>
+
+            <div class="conformite-checkbox-wrap">
+              <mat-checkbox
+                [checked]="ligne.conforme"
+                (change)="mettreAJourLigne(i, 'conforme', $event.checked)">
+                Conforme aux normes SONAGESS
+              </mat-checkbox>
+            </div>
+
+            @if (!ligne.conforme || qualiteAlerteLigne(ligne)) {
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
+                <mat-label>Motif de non-conformité</mat-label>
+                <input
+                  matInput
+                  [value]="ligne.motifRejet"
+                  (input)="mettreAJourLigne(i, 'motifRejet', $any($event.target).value)"
+                  placeholder="Humidité hors-norme, présence de corps étrangers…" />
+              </mat-form-field>
+            }
+          </div>
+
+          <div class="ligne-recap-bar">
+            <span>Poids Net : <strong>{{ poidsNetLigne(ligne) | number:'1.0-2' }} kg</strong></span>
+            <span>·</span>
+            <span>Prix : <strong>{{ prixUnitaireLigne(ligne) | number:'1.0-0' }} CFA/kg</strong></span>
+            <span>·</span>
+            <span class="montant-ligne">Valeur : <strong>{{ montantLigne(ligne) | number:'1.0-0' }} FCFA</strong></span>
+          </div>
+        </div>
+      }
+
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        class="add-ligne-btn"
+        (click)="ajouterLigne()">
+        <mat-icon>add_circle_outline</mat-icon>
+        Ajouter une autre spéculation au bordereau
+      </button>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-stroked-button type="button" (click)="fermer()" [disabled]="enregistrement()">
+    Annuler
+  </button>
+  <div class="total-recap">
+    Total : <strong>{{ totalSacsLignes() }} sac(s)</strong> ·
+    <strong>{{ totalPoidsNetLignes() | number:'1.0-0' }} kg</strong> ·
+    <span class="total-cfa">{{ totalMontantLignes() | number:'1.0-0' }} FCFA</span>
+  </div>
+  <button
+    mat-flat-button
+    color="primary"
+    class="btn-submit"
+    form="collecteForm"
+    type="submit"
+    [disabled]="enregistrement() || sansComptoir() || lignesPesee().length === 0">
+    <mat-icon>check_circle</mat-icon>
+    {{ enregistrement() ? 'Certification en cours…' : 'Émettre le BRBC (' + lignesPesee().length + ' ligne' + (lignesPesee().length > 1 ? 's' : '') + ')' }}
+  </button>
+</mat-dialog-actions>
+

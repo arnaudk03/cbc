@@ -1,5 +1,8 @@
 package bf.gov.anptic.sonagess.cbc.dashboard.service;
 
+import bf.gov.anptic.sonagess.cbc.auth.domain.Utilisateur;
+import bf.gov.anptic.sonagess.cbc.auth.repository.UtilisateurRepository;
+import bf.gov.anptic.sonagess.cbc.common.BusinessException;
 import bf.gov.anptic.sonagess.cbc.common.ResourceNotFoundException;
 import bf.gov.anptic.sonagess.cbc.referentiels.domain.Campagne;
 import bf.gov.anptic.sonagess.cbc.referentiels.domain.CampagneStatut;
@@ -12,7 +15,9 @@ import bf.gov.anptic.sonagess.cbc.collectes.repository.CollecteBordChampReposito
 import bf.gov.anptic.sonagess.cbc.referentiels.repository.ComptoirRepository;
 import bf.gov.anptic.sonagess.cbc.paiements.repository.OrdrePaiementRepository;
 import bf.gov.anptic.sonagess.cbc.dashboard.dto.DashboardDtos;
+import bf.gov.anptic.sonagess.cbc.security.Roles;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +32,14 @@ public class DashboardService {
     private final ComptoirRepository comptoirRepository;
     private final BordereauReceptionBrbcRepository bordereauRepository;
     private final OrdrePaiementRepository paiementRepository;
+    private final UtilisateurRepository utilisateurRepository;
 
     @Transactional(readOnly = true)
-    public DashboardDtos.DashboardResponse tableauDeBord(Long campagneId) {
+    public DashboardDtos.DashboardResponse tableauDeBord(Long campagneId, Long utilisateurId) {
+        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable."));
+        Long comptoirId = idComptoirImpose(utilisateur);
+
         Campagne campagne = campagneId != null
                 ? campagneRepository.findById(campagneId)
                     .orElseThrow(() -> new ResourceNotFoundException("Campagne introuvable."))
@@ -39,46 +49,53 @@ public class DashboardService {
         if (campagne == null) {
             return new DashboardDtos.DashboardResponse(null,
                     new DashboardDtos.Kpis(0.0, 0.0, 0.0, 0, 0.0,
-                            comptoirRepository.countByActifTrue(), 0, 0),
+                            comptoirsActifs(comptoirId), 0, 0),
                     List.of(), List.of(), List.of());
         }
 
         double objectif = valeurOuZero(campagne.getObjectifTotalTonnes());
         double collecte = arrondi(valeurOuZero(collecteRepository.sumQuantiteCollectee(
-                campagne.getId(), CollecteStatut.REJETEE)) / 1000.0);
+                campagne.getId(), CollecteStatut.REJETEE, comptoirId)) / 1000.0);
         double taux = objectif > 0 ? arrondi(collecte / objectif * 100.0) : 0.0;
 
-        long enAttente = collecteRepository.countByCampagneIdAndStatut(
-                campagne.getId(), CollecteStatut.SYNCHRONISEE)
-                + collecteRepository.countByCampagneIdAndStatut(
-                campagne.getId(), CollecteStatut.EXAMINEE_SCP);
+        long enAttente = collecteRepository.countByCampagneIdAndStatutInAndComptoirId(
+                campagne.getId(),
+                List.of(CollecteStatut.SYNCHRONISEE, CollecteStatut.EXAMINEE_SCP),
+                comptoirId);
 
         DashboardDtos.Kpis kpis = new DashboardDtos.Kpis(
                 arrondi(objectif),
                 arrondi(collecte),
                 taux,
-                bordereauRepository.countByStatutValidation(StatutValidationBrbc.VALIDE_DCT),
-                arrondi(valeurOuZero(paiementRepository.sumMontantByStatut(OrdrePaiementStatut.CONFIRME))),
-                comptoirRepository.countByActifTrue(),
+                bordereauRepository.countByStatutValidationEtComptoir(
+                        StatutValidationBrbc.VALIDE_DCT, comptoirId),
+                arrondi(valeurOuZero(paiementRepository.sumMontantByStatutEtComptoir(
+                        OrdrePaiementStatut.CONFIRME, comptoirId))),
+                comptoirsActifs(comptoirId),
                 enAttente,
-                paiementRepository.countByStatut(OrdrePaiementStatut.INITIE)
+                paiementRepository.countByStatutEtComptoir(OrdrePaiementStatut.INITIE, comptoirId)
         );
 
         List<DashboardDtos.SpeculationStat> speculations = collecteRepository
-                .sumQuantiteParSpeculation(campagne.getId(), CollecteStatut.REJETEE).stream()
+                .sumQuantiteParSpeculation(campagne.getId(), CollecteStatut.REJETEE, comptoirId).stream()
                 .map(ligne -> new DashboardDtos.SpeculationStat(
                         (String) ligne[0], (String) ligne[1],
                         arrondi(((Number) ligne[2]).doubleValue() / 1000.0)))
                 .toList();
 
-        List<DashboardDtos.RegionStat> regions = collecteRepository
-                .sumQuantiteParRegion(campagne.getId(), CollecteStatut.REJETEE.name()).stream()
+        List<Object[]> lignesRegions = comptoirId == null
+                ? collecteRepository.sumQuantiteParRegion(
+                        campagne.getId(), CollecteStatut.REJETEE.name())
+                : collecteRepository.sumQuantiteParRegionPourComptoir(
+                        campagne.getId(), CollecteStatut.REJETEE.name(), comptoirId);
+
+        List<DashboardDtos.RegionStat> regions = lignesRegions.stream()
                 .map(ligne -> new DashboardDtos.RegionStat(
                         (String) ligne[0], arrondi(((Number) ligne[1]).doubleValue() / 1000.0)))
                 .toList();
 
         List<DashboardDtos.EvolutionPoint> evolution = collecteRepository
-                .evolutionMensuelle(campagne.getId(), CollecteStatut.REJETEE).stream()
+                .evolutionMensuelle(campagne.getId(), CollecteStatut.REJETEE, comptoirId).stream()
                 .map(ligne -> new DashboardDtos.EvolutionPoint(
                         (String) ligne[0], arrondi(((Number) ligne[1]).doubleValue() / 1000.0)))
                 .toList();
@@ -88,6 +105,26 @@ public class DashboardService {
                 campagne.getDateDebut(), campagne.getDateFin());
 
         return new DashboardDtos.DashboardResponse(info, kpis, speculations, regions, evolution);
+    }
+
+    private long comptoirsActifs(Long comptoirId) {
+        if (comptoirId == null) {
+            return comptoirRepository.countByActifTrue();
+        }
+        return comptoirRepository.existsByIdAndActifTrue(comptoirId) ? 1L : 0L;
+    }
+
+    private Long idComptoirImpose(Utilisateur utilisateur) {
+        if (!utilisateur.hasRole(Roles.AGENT_COLLECTEUR)
+                && !utilisateur.hasRole(Roles.CHEF_COMPTOIR)) {
+            return null;
+        }
+        if (utilisateur.getComptoir() == null) {
+            throw new BusinessException(
+                    "Aucun comptoir n'est affecté à votre compte. Contactez l'administrateur.",
+                    HttpStatus.FORBIDDEN);
+        }
+        return utilisateur.getComptoir().getId();
     }
 
     private double valeurOuZero(Double valeur) {

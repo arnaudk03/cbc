@@ -279,19 +279,54 @@ public class StockService {
                 .orElseThrow(() -> new ResourceNotFoundException("Magasin de réception introuvable."));
         Utilisateur magasinier = utilisateurRepository.findById(utilisateurId)
                 .orElseThrow(() -> new ResourceNotFoundException("Magasinier introuvable."));
+        if (request.lignes() == null || request.lignes().isEmpty()) {
+            throw new BusinessException("Au moins une ligne de réception est obligatoire.");
+        }
 
-        double ecart = request.tonnageDechargeKg() - bebc.getTonnageEnleveKg();
+        Map<Long, BebcLigneEnlevement> lignesEnlevement = new HashMap<>();
+        for (BebcLigneEnlevement ligne : bebc.getLignes()) {
+            lignesEnlevement.put(ligne.getSpeculation().getId(), ligne);
+        }
+        Set<Long> speculationsVues = new HashSet<>();
+        int totalSacsRecus = 0;
+        double totalTonnageRecu = 0.0;
+        for (StockDtos.ReceptionLigneRequest ligneRequest : request.lignes()) {
+            BebcLigneEnlevement ligneEnlevement = lignesEnlevement.get(ligneRequest.speculationId());
+            if (ligneEnlevement == null) {
+                throw new BusinessException("La spéculation " + ligneRequest.speculationId()
+                        + " ne figure pas sur le bordereau d'enlèvement.");
+            }
+            if (!speculationsVues.add(ligneRequest.speculationId())) {
+                throw new BusinessException(
+                        "Chaque spéculation ne peut apparaître qu'une seule fois dans la réception.");
+            }
+            int sacsRecus = valeurOuZero(ligneRequest.nombreSacsRecus());
+            double quantiteRecue = arrondir(sacsRecus * ligneEnlevement.getColisageKg());
+            ligneEnlevement.setNombreSacsRecus(sacsRecus);
+            ligneEnlevement.setQuantiteRecueKg(quantiteRecue);
+            totalSacsRecus += sacsRecus;
+            totalTonnageRecu = arrondir(totalTonnageRecu + quantiteRecue);
+        }
+        if (speculationsVues.size() != lignesEnlevement.size()) {
+            throw new BusinessException(
+                    "Une ligne de réception est requise pour chaque spéculation du bordereau.");
+        }
+
+        double ecart = arrondir(totalTonnageRecu - bebc.getTonnageEnleveKg());
+        int ecartSacs = totalSacsRecus - bebc.getNombreSacs();
         double tolerance = Math.max(0.5, bebc.getTonnageEnleveKg() * 0.02);
+        boolean ecartPoidsConstate = ecart < -tolerance || ecart > tolerance;
+        boolean ecartSacsConstate = ecartSacs != 0;
         StatutConformiteReception conformite;
-        if (ecart < -tolerance) {
-            conformite = StatutConformiteReception.MANQUANT;
-            bebc.setStatut(StatutBebc.ECART_CONSTATE);
-        } else if (ecart > tolerance) {
-            conformite = StatutConformiteReception.EXCEDENT;
-            bebc.setStatut(StatutBebc.ECART_CONSTATE);
-        } else {
+        if (!ecartPoidsConstate && !ecartSacsConstate) {
             conformite = StatutConformiteReception.CONFORME;
             bebc.setStatut(StatutBebc.LIVRE);
+        } else {
+            boolean manquant = ecartPoidsConstate ? ecart < 0 : ecartSacs < 0;
+            conformite = manquant
+                    ? StatutConformiteReception.MANQUANT
+                    : StatutConformiteReception.EXCEDENT;
+            bebc.setStatut(StatutBebc.ECART_CONSTATE);
         }
         bebc.setMagasinDestination(magasin);
         enlevementRepository.save(bebc);
@@ -303,15 +338,16 @@ public class StockService {
                 .numeroReception("REC-" + LocalDate.now().getYear() + "-"
                         + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                 .dateDechargement(LocalDateTime.now())
-                .nombreSacsRecus(request.nombreSacsRecus())
-                .tonnageDechargeKg(request.tonnageDechargeKg())
+                .nombreSacsRecus(totalSacsRecus)
+                .tonnageDechargeKg(totalTonnageRecu)
+                .ecartSacs(ecartSacs)
                 .ecartPoidsKg(ecart)
                 .statutConformite(conformite)
                 .build();
         receptionRepository.save(reception);
 
         magasin.setStockActuelTonnes(valeurOuZero(magasin.getStockActuelTonnes())
-                + request.tonnageDechargeKg() / 1000.0);
+                + totalTonnageRecu / 1000.0);
         magasinRepository.save(magasin);
 
         if (conformite != StatutConformiteReception.CONFORME) {
@@ -319,14 +355,16 @@ public class StockService {
                 utilisateurRepository.findByRoles_Code(role).forEach(destinataire ->
                         notificationService.envoyerInApp(destinataire,
                                 "Écart constaté à la réception",
-                                "Le BEBC " + bebc.getNumeroBebc() + " présente un écart de " + ecart
-                                        + " kg (" + conformite.name() + ") au magasin " + magasin.getNom() + ".",
+                                "Le BEBC " + bebc.getNumeroBebc() + " présente un écart de " + ecartSacs
+                                        + " sac(s) et " + ecart + " kg (" + conformite.name()
+                                        + ") au magasin " + magasin.getNom() + ".",
                                 TypeNotification.ALERTE_ECART_TRANSFERT, null, null, bebc));
             }
         }
 
         auditService.succes(magasinier, "RECEPTION_MAGASIN", "BordereauReceptionMagasin", reception.getId(),
-                "BEBC " + bebc.getNumeroBebc() + " réceptionné - écart " + ecart + " kg");
+                "BEBC " + bebc.getNumeroBebc() + " réceptionné - écart " + ecartSacs + " sac(s) / "
+                        + ecart + " kg");
         return StockDtos.TransfertResponse.from(bebc, reception);
     }
 

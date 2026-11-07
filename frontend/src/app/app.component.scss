@@ -1,6 +1,6 @@
 :host {
-  --sonagess-green-deep: #041f12;
-  --sonagess-green: #0a3d24;
+  --sonagess-green-deep: #0e3121;
+  --sonagess-green: #144930;
   --sonagess-green-light: #15803d;
   --sonagess-red: #c8102e;
   --sonagess-gold: #f59e0b;
@@ -39,14 +39,14 @@
     #f59e0b 80px,
     #f59e0b 88px
   );
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .app-header-container {
   position: sticky;
   top: 5px;
   z-index: 50;
-  box-shadow: 0 4px 20px rgba(4, 31, 18, 0.25);
+  box-shadow: 0 4px 16px rgba(14, 49, 33, 0.18);
 }
 
 /* --------------------------------------------------------------------------
@@ -61,8 +61,8 @@
   height: 66px;
   padding: 0 24px;
   color: #f8fafc;
-  background: linear-gradient(135deg, var(--sonagess-green-deep) 0%, #082d1b 60%, var(--sonagess-green) 100%);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.22);
+  background: linear-gradient(135deg, #103c27 0%, #154c33 55%, #1a5c3e 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .toolbar-brand {
@@ -292,8 +292,8 @@
   height: 38px;
   padding: 0 20px;
   color: #e2e8f0;
-  background: #09120e;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0d2f1f;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   font-variant-numeric: tabular-nums;
   overflow: hidden;
 }
@@ -465,8 +465,8 @@
   min-width: 210px;
   max-width: 320px;
   flex-shrink: 0;
-  background: #061910;
-  border-right: 1px solid rgba(245, 158, 11, 0.15);
+  background: #0e3121;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
   flex-direction: column;
   padding: 20px 14px;
@@ -791,6 +791,7 @@
   color: rgba(240, 253, 244, 0.85);
   background: var(--sonagess-green-deep);
   position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .footer-faso-strip {

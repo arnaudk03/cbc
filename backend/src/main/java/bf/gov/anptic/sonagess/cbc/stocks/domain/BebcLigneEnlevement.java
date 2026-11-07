@@ -49,4 +49,10 @@ public class BebcLigneEnlevement {
 
     @Column(name = "quantite_kg", nullable = false)
     private Double quantiteKg;
+
+    @Column(name = "nombre_sacs_recus")
+    private Integer nombreSacsRecus;
+
+    @Column(name = "quantite_recue_kg")
+    private Double quantiteRecueKg;
 }

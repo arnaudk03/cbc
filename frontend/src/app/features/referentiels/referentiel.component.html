@@ -567,9 +567,6 @@
                 <th>E-mail</th>
                 <th>Téléphone</th>
                 <th>Rôles</th>
-                <th>Comptoir</th>
-                <th>Statut</th>
-                <th>Dernière connexion</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -588,24 +585,11 @@
                   </div>
                 </td>
                 <td>
-                  @if (utilisateur.comptoirCode) {
-                  <span class="cell-title">{{ utilisateur.comptoirCode }}</span>
-                  <span class="cell-sub">{{ utilisateur.comptoirNom }}</span>
-                  } @else {
-                  <span class="cell-sub">Global</span>
-                  }
-                </td>
-                <td>
-                  <span class="status-chip" [ngClass]="utilisateur.actif ? 'succes' : 'neutre'">
-                    {{ utilisateur.actif ? 'Actif' : 'Inactif' }}
-                  </span>
-                  @if (utilisateur.compteBloque) {
-                  <span class="cell-sub">Bloqué</span>
-                  }
-                </td>
-                <td>{{ formaterDate(utilisateur.dateDerniereConnexion) }}</td>
-                <td>
                   <div class="row-actions">
+                    <button mat-icon-button title="Détail" aria-label="Voir le détail de l'utilisateur"
+                      (click)="ouvrirDetailUtilisateur(utilisateur)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
                     <button mat-icon-button aria-label="Modifier l'utilisateur"
                       (click)="modifierUtilisateur(utilisateur)">
                       <mat-icon>edit</mat-icon>
@@ -622,7 +606,7 @@
               </tr>
               } @empty {
               <tr>
-                <td colspan="9" class="empty-cell">Aucun utilisateur enregistré.</td>
+                <td colspan="6" class="empty-cell">Aucun utilisateur enregistré.</td>
               </tr>
               }
             </tbody>

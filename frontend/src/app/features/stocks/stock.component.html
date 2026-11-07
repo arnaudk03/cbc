@@ -151,7 +151,8 @@
                           matInput
                           type="number"
                           min="0"
-                          [(ngModel)]="ligne.nombreSacsRecus" />
+                          [ngModel]="ligne.nombreSacsRecus"
+                          (ngModelChange)="modifierSacsRecus(i, $event)" />
                       </mat-form-field>
                       <mat-form-field appearance="outline">
                         <mat-label>Colisage (kg/sac)</mat-label>
@@ -435,7 +436,7 @@
                     @if (row.reception; as reception) {
                       <span class="cell-main">{{ reception.numeroReception }}</span>
                       <span class="cell-sub">
-                        {{ reception.statutConformite }} · écart {{ reception.ecartPoidsKg }} kg
+                        {{ reception.statutConformite }} · écart {{ formaterEcartSacs(reception.ecartSacs) }}, {{ reception.ecartPoidsKg }} kg
                       </span>
                     } @else {
                       <span class="cell-sub italic">En attente</span>

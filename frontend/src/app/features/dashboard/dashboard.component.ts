@@ -46,6 +46,36 @@ export class DashboardComponent {
   readonly erreur = signal<string | null>(null);
   readonly donnees = signal<DashboardResponse | null>(null);
 
+  readonly estProfilTerrain = computed(() =>
+    this.auth.possedeUnRole('AGENT_COLLECTEUR', 'CHEF_COMPTOIR')
+  );
+  readonly peutVoirCollectes = computed(() =>
+    this.auth.possedeUnRole('ADMIN', 'DCT', 'SCP', 'AGENT_COLLECTEUR', 'CHEF_COMPTOIR')
+  );
+  readonly peutVoirPaiements = computed(() =>
+    this.auth.possedeUnRole('ADMIN', 'SFB_INITIATEUR', 'SFB_CHEF', 'DFC_DIRECTEUR')
+  );
+  readonly peutVoirFinances = computed(() =>
+    this.auth.possedeUnRole(
+      'ADMIN',
+      'DCT',
+      'DGSA',
+      'DFC_DIRECTEUR',
+      'SFB_INITIATEUR',
+      'SFB_CHEF',
+      'COMPTABILITE',
+      'CONSULTATION'
+    )
+  );
+  readonly peutVoirReseau = computed(() => !this.estProfilTerrain());
+  readonly aDesActions = computed(() => this.peutVoirCollectes() || this.peutVoirPaiements());
+  readonly actionsEnAttente = computed(() => {
+    const kpis = this.donnees()?.kpis;
+    const collectes = this.peutVoirCollectes() ? kpis?.collectesEnAttente ?? 0 : 0;
+    const paiements = this.peutVoirPaiements() ? kpis?.paiementsEnAttente ?? 0 : 0;
+    return collectes + paiements;
+  });
+
   readonly totalTonnage = computed(() => {
     const list = this.donnees()?.speculations ?? [];
     return list.reduce((somme, item) => somme + item.tonnage, 0) || 1;
@@ -108,11 +138,13 @@ export class DashboardComponent {
   readonly kpis = computed(() => {
     const kpis = this.donnees()?.kpis;
     const paiementsEnAttente = kpis?.paiementsEnAttente ?? 0;
-    return [
+    const cartes = [
       {
-        titre: 'Collecté cette campagne',
+        titre: this.estProfilTerrain() ? 'Collecté par mon comptoir' : 'Collecté cette campagne',
         valeur: `${this.formaterNombre(kpis?.collecteTonnes ?? 0)} t`,
-        detail: `Objectif : ${this.formaterNombre(kpis?.objectifTonnes ?? 0)} t`,
+        detail: `${this.estProfilTerrain() ? 'Objectif national' : 'Objectif'} : ${this.formaterNombre(
+          kpis?.objectifTonnes ?? 0
+        )} t`,
         icone: 'warehouse',
         type: 'principal'
       },
@@ -122,8 +154,11 @@ export class DashboardComponent {
         detail: 'Liasses certifiées DCT',
         icone: 'verified',
         type: 'succes'
-      },
-      {
+      }
+    ];
+
+    if (this.peutVoirFinances()) {
+      cartes.push({
         titre: 'Décaissé Mobile Money',
         valeur: this.formaterMontant(kpis?.montantDecaisseCfa ?? 0),
         detail:
@@ -132,15 +167,20 @@ export class DashboardComponent {
             : 'Aucun paiement en attente',
         icone: 'payments',
         type: 'or'
-      },
-      {
+      });
+    }
+
+    if (this.peutVoirReseau()) {
+      cartes.push({
         titre: 'Comptoirs actifs',
         valeur: this.formaterNombre(kpis?.comptoirsActifs ?? 0),
         detail: 'Réseau national de collecte',
         icone: 'storefront',
         type: 'info'
-      }
-    ];
+      });
+    }
+
+    return cartes;
   });
 
   constructor() {

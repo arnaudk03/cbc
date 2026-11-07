@@ -116,13 +116,49 @@ public final class StockDtos {
     ) {
     }
 
+    public record ReceptionLigneRequest(
+            @NotNull(message = "La spéculation est obligatoire") Long speculationId,
+            @NotNull(message = "Le nombre de sacs reçus est obligatoire")
+            @PositiveOrZero(message = "Le nombre de sacs reçus doit être positif ou nul")
+            Integer nombreSacsRecus
+    ) {
+    }
+
     public record ReceptionRequest(
             @NotNull(message = "Le magasin de réception est obligatoire") Long magasinCentralId,
-            @NotNull(message = "Le nombre de sacs reçus est obligatoire")
-            @PositiveOrZero Integer nombreSacsRecus,
-            @NotNull(message = "Le tonnage déchargé est obligatoire")
-            @PositiveOrZero Double tonnageDechargeKg
+            @NotEmpty(message = "Au moins une ligne de réception est obligatoire")
+            @Valid List<ReceptionLigneRequest> lignes
     ) {
+    }
+
+    public record ReceptionLigneResponse(
+            Long speculationId,
+            String speculationCode,
+            String speculationNom,
+            Integer nombreSacsAttendus,
+            Integer nombreSacsRecus,
+            Double colisageKg,
+            Double quantiteAttendueKg,
+            Double quantiteRecueKg,
+            Integer ecartSacs,
+            Double ecartPoidsKg
+    ) {
+        public static ReceptionLigneResponse from(BebcLigneEnlevement ligne) {
+            int nombreSacsRecus = ligne.getNombreSacsRecus() != null ? ligne.getNombreSacsRecus() : 0;
+            double quantiteRecueKg = ligne.getQuantiteRecueKg() != null ? ligne.getQuantiteRecueKg() : 0.0;
+            return new ReceptionLigneResponse(
+                    ligne.getSpeculation().getId(),
+                    ligne.getSpeculation().getCode(),
+                    ligne.getSpeculation().getNom(),
+                    ligne.getNombreSacs(),
+                    nombreSacsRecus,
+                    ligne.getColisageKg(),
+                    ligne.getQuantiteKg(),
+                    quantiteRecueKg,
+                    nombreSacsRecus - ligne.getNombreSacs(),
+                    arrondir(quantiteRecueKg - ligne.getQuantiteKg())
+            );
+        }
     }
 
     public record ReceptionResponse(
@@ -134,8 +170,10 @@ public final class StockDtos {
             LocalDateTime dateDechargement,
             Integer nombreSacsRecus,
             Double tonnageDechargeKg,
+            Integer ecartSacs,
             Double ecartPoidsKg,
-            String statutConformite
+            String statutConformite,
+            List<ReceptionLigneResponse> lignes
     ) {
         public static ReceptionResponse from(BordereauReceptionMagasin reception) {
             if (reception == null) {
@@ -150,8 +188,13 @@ public final class StockDtos {
                     reception.getDateDechargement(),
                     reception.getNombreSacsRecus(),
                     reception.getTonnageDechargeKg(),
+                    reception.getEcartSacs(),
                     reception.getEcartPoidsKg(),
-                    reception.getStatutConformite().name()
+                    reception.getStatutConformite().name(),
+                    reception.getBordereauEnlevement().getLignes().stream()
+                            .filter(ligne -> ligne.getNombreSacsRecus() != null)
+                            .map(ReceptionLigneResponse::from)
+                            .toList()
             );
         }
     }
@@ -227,5 +270,9 @@ public final class StockDtos {
                     ReceptionResponse.from(reception)
             );
         }
+    }
+
+    private static double arrondir(double valeur) {
+        return Math.round(valeur * 100.0) / 100.0;
     }
 }

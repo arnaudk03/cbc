@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,9 +55,11 @@ public interface CollecteBordChampRepository extends JpaRepository<CollecteBordC
             select coalesce(sum(c.quantiteKg), 0)
             from CollecteBordChamp c
             where c.campagne.id = :campagneId and c.statut <> :statutRejete
+              and (:comptoirId is null or c.comptoir.id = :comptoirId)
             """)
     Double sumQuantiteCollectee(@Param("campagneId") Long campagneId,
-                                @Param("statutRejete") CollecteStatut statutRejete);
+                                @Param("statutRejete") CollecteStatut statutRejete,
+                                @Param("comptoirId") Long comptoirId);
 
     @Query("""
             select coalesce(sum(c.quantiteKg), 0)
@@ -79,6 +82,17 @@ public interface CollecteBordChampRepository extends JpaRepository<CollecteBordC
 
     long countByCampagneIdAndStatut(Long campagneId, CollecteStatut statut);
 
+    @Query("""
+            select count(c)
+            from CollecteBordChamp c
+            where c.campagne.id = :campagneId
+              and c.statut in :statuts
+              and (:comptoirId is null or c.comptoir.id = :comptoirId)
+            """)
+    long countByCampagneIdAndStatutInAndComptoirId(@Param("campagneId") Long campagneId,
+                                                   @Param("statuts") Collection<CollecteStatut> statuts,
+                                                   @Param("comptoirId") Long comptoirId);
+
     long countByCampagneIdAndStatutNot(Long campagneId, CollecteStatut statut);
 
     long countByStatut(CollecteStatut statut);
@@ -87,11 +101,13 @@ public interface CollecteBordChampRepository extends JpaRepository<CollecteBordC
             select c.speculation.code, c.speculation.nom, coalesce(sum(c.quantiteKg), 0)
             from CollecteBordChamp c
             where c.campagne.id = :campagneId and c.statut <> :statutRejete
+              and (:comptoirId is null or c.comptoir.id = :comptoirId)
             group by c.speculation.code, c.speculation.nom
             order by coalesce(sum(c.quantiteKg), 0) desc
             """)
     List<Object[]> sumQuantiteParSpeculation(@Param("campagneId") Long campagneId,
-                                             @Param("statutRejete") CollecteStatut statutRejete);
+                                             @Param("statutRejete") CollecteStatut statutRejete,
+                                             @Param("comptoirId") Long comptoirId);
 
     @Query(value = """
             select r.name, coalesce(sum(c.quantite_kg), 0)
@@ -106,15 +122,32 @@ public interface CollecteBordChampRepository extends JpaRepository<CollecteBordC
     List<Object[]> sumQuantiteParRegion(@Param("campagneId") Long campagneId,
                                         @Param("statutRejete") String statutRejete);
 
+    @Query(value = """
+            select r.name, coalesce(sum(c.quantite_kg), 0)
+            from collectes_bord_champ c
+              join comptoirs co on co.id = c.comptoir_id
+              join locality_hierarchies lh on lh.descendant_id = co.locality_id
+              join localities r on r.id = lh.ancestor_id and r.type = 'REGION'
+            where c.campagne_id = :campagneId and c.statut <> :statutRejete
+              and co.id = :comptoirId
+            group by r.name
+            order by coalesce(sum(c.quantite_kg), 0) desc
+            """, nativeQuery = true)
+    List<Object[]> sumQuantiteParRegionPourComptoir(@Param("campagneId") Long campagneId,
+                                                    @Param("statutRejete") String statutRejete,
+                                                    @Param("comptoirId") Long comptoirId);
+
     @Query("""
             select function('to_char', c.dateHeureCollecte, 'YYYY-MM'), coalesce(sum(c.quantiteKg), 0)
             from CollecteBordChamp c
             where c.campagne.id = :campagneId and c.statut <> :statutRejete
+              and (:comptoirId is null or c.comptoir.id = :comptoirId)
             group by function('to_char', c.dateHeureCollecte, 'YYYY-MM')
             order by function('to_char', c.dateHeureCollecte, 'YYYY-MM')
             """)
     List<Object[]> evolutionMensuelle(@Param("campagneId") Long campagneId,
-                                      @Param("statutRejete") CollecteStatut statutRejete);
+                                      @Param("statutRejete") CollecteStatut statutRejete,
+                                      @Param("comptoirId") Long comptoirId);
 
     List<CollecteBordChamp> findTop10ByOrderByDateHeureCollecteDesc();
 

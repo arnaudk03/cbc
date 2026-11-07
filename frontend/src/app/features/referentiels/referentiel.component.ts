@@ -48,6 +48,7 @@ import {
   STATUT_PRIX_LABELS
 } from './referentiel.models';
 import { ReferentielMetierService } from './referentiel.service';
+import { UtilisateurDetailDialogComponent } from './utilisateur-detail-dialog.component';
 
 class PaginatorFr extends MatPaginatorIntl {
   override itemsPerPageLabel = 'Éléments par page';
@@ -122,53 +123,53 @@ export class ReferentielComponent implements OnInit {
   );
   readonly peutGererMagasins = computed(() => this.auth.possedeUnRole('ADMIN', 'DGSA', 'SGS'));
   readonly peutGererUtilisateurs = computed(() => this.auth.possedeUnRole('ADMIN'));
-   readonly producteursFiltres = computed(() => {
-     const recherche = this.rechercheProducteur().trim().toLowerCase();
-     if (!recherche) {
-       return this.producteurs();
-     }
-     return this.producteurs().filter(
-       (producteur) =>
-         producteur.nomPrenom.toLowerCase().includes(recherche) ||
-         producteur.telephoneMobileMoney.includes(recherche) ||
-         producteur.cnibNumero.toLowerCase().includes(recherche)
-     );
-   });
+  readonly producteursFiltres = computed(() => {
+    const recherche = this.rechercheProducteur().trim().toLowerCase();
+    if (!recherche) {
+      return this.producteurs();
+    }
+    return this.producteurs().filter(
+      (producteur) =>
+        producteur.nomPrenom.toLowerCase().includes(recherche) ||
+        producteur.telephoneMobileMoney.includes(recherche) ||
+        producteur.cnibNumero.toLowerCase().includes(recherche)
+    );
+  });
 
-   readonly pageIndexCampagnes = signal(0);
-   readonly pageSizeCampagnes = signal(5);
-   readonly campagnesPaginees = computed(() => this.paginer(this.campagnes(), this.pageIndexCampagnes(), this.pageSizeCampagnes()));
+  readonly pageIndexCampagnes = signal(0);
+  readonly pageSizeCampagnes = signal(5);
+  readonly campagnesPaginees = computed(() => this.paginer(this.campagnes(), this.pageIndexCampagnes(), this.pageSizeCampagnes()));
 
-   readonly pageIndexPrix = signal(0);
-   readonly pageSizePrix = signal(5);
-   readonly prixPaginees = computed(() => this.paginer(this.prix(), this.pageIndexPrix(), this.pageSizePrix()));
+  readonly pageIndexPrix = signal(0);
+  readonly pageSizePrix = signal(5);
+  readonly prixPaginees = computed(() => this.paginer(this.prix(), this.pageIndexPrix(), this.pageSizePrix()));
 
-   readonly pageIndexComptoirs = signal(0);
-   readonly pageSizeComptoirs = signal(5);
-   readonly comptoirsPaginees = computed(() => this.paginer(this.comptoirs(), this.pageIndexComptoirs(), this.pageSizeComptoirs()));
+  readonly pageIndexComptoirs = signal(0);
+  readonly pageSizeComptoirs = signal(5);
+  readonly comptoirsPaginees = computed(() => this.paginer(this.comptoirs(), this.pageIndexComptoirs(), this.pageSizeComptoirs()));
 
-   readonly pageIndexProducteurs = signal(0);
-   readonly pageSizeProducteurs = signal(5);
-   readonly producteursPaginees = computed(() => this.paginer(this.producteursFiltres(), this.pageIndexProducteurs(), this.pageSizeProducteurs()));
+  readonly pageIndexProducteurs = signal(0);
+  readonly pageSizeProducteurs = signal(5);
+  readonly producteursPaginees = computed(() => this.paginer(this.producteursFiltres(), this.pageIndexProducteurs(), this.pageSizeProducteurs()));
 
-   readonly pageIndexMagasins = signal(0);
-   readonly pageSizeMagasins = signal(5);
-   readonly magasinsPaginees = computed(() => this.paginer(this.magasins(), this.pageIndexMagasins(), this.pageSizeMagasins()));
+  readonly pageIndexMagasins = signal(0);
+  readonly pageSizeMagasins = signal(5);
+  readonly magasinsPaginees = computed(() => this.paginer(this.magasins(), this.pageIndexMagasins(), this.pageSizeMagasins()));
 
-   readonly pageIndexSpeculations = signal(0);
-   readonly pageSizeSpeculations = signal(5);
-   readonly speculationsPaginees = computed(() => this.paginer(this.speculations(), this.pageIndexSpeculations(), this.pageSizeSpeculations()));
+  readonly pageIndexSpeculations = signal(0);
+  readonly pageSizeSpeculations = signal(5);
+  readonly speculationsPaginees = computed(() => this.paginer(this.speculations(), this.pageIndexSpeculations(), this.pageSizeSpeculations()));
 
-   readonly pageIndexUtilisateurs = signal(0);
-   readonly pageSizeUtilisateurs = signal(5);
-   readonly utilisateursPaginees = computed(() => this.paginer(this.utilisateurs(), this.pageIndexUtilisateurs(), this.pageSizeUtilisateurs()));
+  readonly pageIndexUtilisateurs = signal(0);
+  readonly pageSizeUtilisateurs = signal(5);
+  readonly utilisateursPaginees = computed(() => this.paginer(this.utilisateurs(), this.pageIndexUtilisateurs(), this.pageSizeUtilisateurs()));
 
-   constructor() {
-     effect(() => {
-       this.rechercheProducteur();
-       this.pageIndexProducteurs.set(0);
-     }, { allowSignalWrites: true });
-   }
+  constructor() {
+    effect(() => {
+      this.rechercheProducteur();
+      this.pageIndexProducteurs.set(0);
+    }, { allowSignalWrites: true });
+  }
 
   paginer<T>(liste: T[], pageIndex: number, pageSize: number): T[] {
     if (!liste || liste.length === 0) {
@@ -180,38 +181,38 @@ export class ReferentielComponent implements OnInit {
     return liste.slice(debut, debut + pageSize);
   }
 
-   changerPage(table: 'campagnes' | 'prix' | 'comptoirs' | 'producteurs' | 'magasins' | 'speculations' | 'utilisateurs', event: PageEvent): void {
-     switch (table) {
-       case 'campagnes':
-         this.pageIndexCampagnes.set(event.pageIndex);
-         this.pageSizeCampagnes.set(event.pageSize);
-         break;
-       case 'prix':
-         this.pageIndexPrix.set(event.pageIndex);
-         this.pageSizePrix.set(event.pageSize);
-         break;
-       case 'comptoirs':
-         this.pageIndexComptoirs.set(event.pageIndex);
-         this.pageSizeComptoirs.set(event.pageSize);
-         break;
-       case 'producteurs':
-         this.pageIndexProducteurs.set(event.pageIndex);
-         this.pageSizeProducteurs.set(event.pageSize);
-         break;
-       case 'magasins':
-         this.pageIndexMagasins.set(event.pageIndex);
-         this.pageSizeMagasins.set(event.pageSize);
-         break;
-       case 'speculations':
-         this.pageIndexSpeculations.set(event.pageIndex);
-         this.pageSizeSpeculations.set(event.pageSize);
-         break;
-       case 'utilisateurs':
-         this.pageIndexUtilisateurs.set(event.pageIndex);
-         this.pageSizeUtilisateurs.set(event.pageSize);
-         break;
-     }
-   }
+  changerPage(table: 'campagnes' | 'prix' | 'comptoirs' | 'producteurs' | 'magasins' | 'speculations' | 'utilisateurs', event: PageEvent): void {
+    switch (table) {
+      case 'campagnes':
+        this.pageIndexCampagnes.set(event.pageIndex);
+        this.pageSizeCampagnes.set(event.pageSize);
+        break;
+      case 'prix':
+        this.pageIndexPrix.set(event.pageIndex);
+        this.pageSizePrix.set(event.pageSize);
+        break;
+      case 'comptoirs':
+        this.pageIndexComptoirs.set(event.pageIndex);
+        this.pageSizeComptoirs.set(event.pageSize);
+        break;
+      case 'producteurs':
+        this.pageIndexProducteurs.set(event.pageIndex);
+        this.pageSizeProducteurs.set(event.pageSize);
+        break;
+      case 'magasins':
+        this.pageIndexMagasins.set(event.pageIndex);
+        this.pageSizeMagasins.set(event.pageSize);
+        break;
+      case 'speculations':
+        this.pageIndexSpeculations.set(event.pageIndex);
+        this.pageSizeSpeculations.set(event.pageSize);
+        break;
+      case 'utilisateurs':
+        this.pageIndexUtilisateurs.set(event.pageIndex);
+        this.pageSizeUtilisateurs.set(event.pageSize);
+        break;
+    }
+  }
 
   ngOnInit(): void {
     this.charger();
@@ -263,10 +264,10 @@ export class ReferentielComponent implements OnInit {
     });
   }
 
-   chargerPrix(campagneId: number): void {
-     this.campagnePrix.set(campagneId);
-     this.pageIndexPrix.set(0);
-     this.referentielMetier.prixGarantis(campagneId).subscribe({
+  chargerPrix(campagneId: number): void {
+    this.campagnePrix.set(campagneId);
+    this.pageIndexPrix.set(0);
+    this.referentielMetier.prixGarantis(campagneId).subscribe({
       next: (prix) => this.prix.set(prix),
       error: () => this.erreur.set('Impossible de charger les prix garantis.')
     });
@@ -561,7 +562,7 @@ export class ReferentielComponent implements OnInit {
         initial: {
           nomPrenom: '',
           telephoneMobileMoney: '',
-          operateurMobile: 'SANK',
+          operateurMobile: 'Orange',
           cnibNumero: '',
           cnibDateDelivrance: null,
           cnibLieuDelivrance: '',
@@ -762,6 +763,14 @@ export class ReferentielComponent implements OnInit {
   }
 
   // ----------------------------------------------------------------- Utilisateurs
+
+  ouvrirDetailUtilisateur(utilisateur: Utilisateur): void {
+    this.dialog.open(UtilisateurDetailDialogComponent, {
+      data: { utilisateur },
+      width: '560px',
+      maxWidth: '96vw'
+    });
+  }
 
   creerUtilisateur(): void {
     if (this.roles().length === 0) {

@@ -1,0 +1,56 @@
+<h2 mat-dialog-title>Détail de l'utilisateur</h2>
+<mat-dialog-content>
+  <div class="detail-header">
+    <div class="detail-icon">
+      <mat-icon>person</mat-icon>
+    </div>
+    <div class="detail-identite">
+      <span class="cell-sub">{{ data.utilisateur.matricule }}</span>
+      <strong>{{ data.utilisateur.nomComplet }}</strong>
+      <span class="status-chip"
+        [ngClass]="data.utilisateur.actif && !data.utilisateur.compteBloque ? 'succes' : 'neutre'">
+        {{ statutLibelle() }}
+      </span>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-item">
+      <span>E-mail</span>
+      <strong>{{ data.utilisateur.email }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Téléphone</span>
+      <strong>{{ data.utilisateur.telephone }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Rôles</span>
+      <div class="role-list">
+        @for (role of data.utilisateur.roles; track role) {
+        <span class="status-chip neutre">{{ libelleRole(role) }}</span>
+        } @empty {
+        <span class="cell-sub">Aucun rôle</span>
+        }
+      </div>
+    </div>
+    <div class="detail-item">
+      <span>Comptoir</span>
+      <strong>{{ comptoirLibelle() }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Statut</span>
+      <strong>{{ statutLibelle() }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Dernière connexion</span>
+      <strong>{{ formaterDate(data.utilisateur.dateDerniereConnexion) }}</strong>
+    </div>
+    <div class="detail-item">
+      <span>Créé le</span>
+      <strong>{{ formaterDate(data.utilisateur.creeLe) }}</strong>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="fermer()">Fermer</button>
+</mat-dialog-actions>

@@ -922,3 +922,32 @@
     padding: 1cm;
   }
 }
+
+.action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  .btn-detail {
+    font-size: 0.8rem;
+    height: 32px;
+    padding: 0 10px;
+    line-height: 32px;
+    border-color: #cbd5e1;
+    color: #0f172a;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+      color: #0284c7;
+    }
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+  }
+}

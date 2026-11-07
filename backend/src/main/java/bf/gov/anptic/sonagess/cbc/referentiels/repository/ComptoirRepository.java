@@ -18,5 +18,7 @@ public interface ComptoirRepository extends JpaRepository<Comptoir, Long> {
 
     boolean existsByCodeAndIdNot(String code, Long id);
 
+    boolean existsByIdAndActifTrue(Long id);
+
     long countByActifTrue();
 }

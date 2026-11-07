@@ -4,7 +4,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { BebcPreviewDialogComponent } from './bebc-preview-dialog.component';
-import { STATUT_BEBC_COLORS, STATUT_BEBC_LABELS, Transfert } from './stock.models';
+import {
+  ReceptionLigne,
+  STATUT_BEBC_COLORS,
+  STATUT_BEBC_LABELS,
+  Transfert
+} from './stock.models';
 
 @Component({
   selector: 'app-bebc-detail-dialog',
@@ -97,9 +102,64 @@ import { STATUT_BEBC_COLORS, STATUT_BEBC_LABELS, Transfert } from './stock.model
             <div><span>Date de déchargement</span><strong>{{ formaterDate(reception.dateDechargement) }}</strong></div>
             <div><span>Sacs reçus</span><strong>{{ reception.nombreSacsRecus }}</strong></div>
             <div><span>Tonnage déchargé</span><strong>{{ formaterKg(reception.tonnageDechargeKg) }}</strong></div>
-            <div><span>Écart</span><strong>{{ formaterKg(reception.ecartPoidsKg) }}</strong></div>
+            <div><span>Écart sacs</span><strong>{{ formaterEcartEntier(reception.ecartSacs) }}</strong></div>
+            <div><span>Écart poids</span><strong>{{ formaterEcartKg(reception.ecartPoidsKg) }}</strong></div>
             <div><span>Conformité</span><strong>{{ reception.statutConformite }}</strong></div>
           </div>
+          @if (reception.lignes.length) {
+            <div class="detail-table-wrapper reception-table-wrapper">
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th>Spéculation</th>
+                    <th class="align-right">Sacs attendus</th>
+                    <th class="align-right">Sacs reçus</th>
+                    <th class="align-right">Écart sacs</th>
+                    <th class="align-right">Poids attendu</th>
+                    <th class="align-right">Poids reçu</th>
+                    <th class="align-right">Écart poids</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (ligne of reception.lignes; track ligne.speculationId) {
+                    <tr>
+                      <td>
+                        <strong>{{ ligne.speculationNom }}</strong>
+                        <span class="cell-sub">{{ ligne.speculationCode }}</span>
+                      </td>
+                      <td class="align-right">{{ ligne.nombreSacsAttendus }}</td>
+                      <td class="align-right">{{ ligne.nombreSacsRecus }}</td>
+                      <td
+                        class="align-right"
+                        [class.ecart-negatif]="ligne.ecartSacs < 0"
+                        [class.ecart-positif]="ligne.ecartSacs > 0">{{ formaterEcartEntier(ligne.ecartSacs) }}</td>
+                      <td class="align-right">{{ formaterKg(ligne.quantiteAttendueKg) }}</td>
+                      <td class="align-right">{{ formaterKg(ligne.quantiteRecueKg) }}</td>
+                      <td
+                        class="align-right"
+                        [class.ecart-negatif]="ligne.ecartPoidsKg < 0"
+                        [class.ecart-positif]="ligne.ecartPoidsKg > 0">{{ formaterEcartKg(ligne.ecartPoidsKg) }}</td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>Total</td>
+                    <td class="align-right">{{ totalSacsAttendus(reception.lignes) }}</td>
+                    <td class="align-right">{{ reception.nombreSacsRecus }}</td>
+                    <td class="align-right">{{ formaterEcartEntier(reception.ecartSacs) }}</td>
+                    <td class="align-right">{{ formaterKg(data.tonnageEnleveKg) }}</td>
+                    <td class="align-right">{{ formaterKg(reception.tonnageDechargeKg) }}</td>
+                    <td class="align-right">{{ formaterEcartKg(reception.ecartPoidsKg) }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          } @else {
+            <p class="legacy-note">
+              Le détail par spéculation n'a pas été enregistré pour cette réception antérieure.
+            </p>
+          }
         </section>
       } @else {
         <div class="info-banner">
@@ -249,6 +309,29 @@ import { STATUT_BEBC_COLORS, STATUT_BEBC_LABELS, Transfert } from './stock.model
         color: #1d4ed8;
         font-size: 0.82rem;
       }
+
+      .reception-table-wrapper {
+        margin-top: 0.85rem;
+      }
+
+      .ecart-negatif {
+        color: #b91c1c !important;
+        font-weight: 700;
+      }
+
+      .ecart-positif {
+        color: #047857 !important;
+        font-weight: 700;
+      }
+
+      .legacy-note {
+        margin: 0.85rem 0 0;
+        padding: 0.65rem 0.8rem;
+        border-radius: 8px;
+        background: #fffbeb;
+        color: #92400e;
+        font-size: 0.8rem;
+      }
     `
   ]
 })
@@ -270,6 +353,26 @@ export class BebcDetailDialogComponent {
       return '—';
     }
     return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(valeur)} kg`;
+  }
+
+  formaterEcartEntier(valeur: number | null | undefined): string {
+    if (valeur === null || valeur === undefined) {
+      return '—';
+    }
+    const signe = valeur > 0 ? '+' : '';
+    return `${signe}${new Intl.NumberFormat('fr-FR').format(valeur)}`;
+  }
+
+  formaterEcartKg(valeur: number | null | undefined): string {
+    if (valeur === null || valeur === undefined) {
+      return '—';
+    }
+    const signe = valeur > 0 ? '+' : '';
+    return `${signe}${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(valeur)} kg`;
+  }
+
+  totalSacsAttendus(lignes: ReceptionLigne[]): number {
+    return lignes.reduce((total, ligne) => total + (Number(ligne.nombreSacsAttendus) || 0), 0);
   }
 
   formaterDate(valeur: string | null): string {

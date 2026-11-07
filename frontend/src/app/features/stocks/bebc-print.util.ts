@@ -36,6 +36,29 @@ function formaterKg(valeur: number | null | undefined): string {
   return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(valeur)} kg`;
 }
 
+function formaterEcartEntier(valeur: number | null | undefined): string {
+  if (valeur === null || valeur === undefined) {
+    return '—';
+  }
+  const signe = valeur > 0 ? '+' : '';
+  return `${signe}${new Intl.NumberFormat('fr-FR').format(valeur)}`;
+}
+
+function formaterEcartKg(valeur: number | null | undefined): string {
+  if (valeur === null || valeur === undefined) {
+    return '—';
+  }
+  const signe = valeur > 0 ? '+' : '';
+  return `${signe}${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(valeur)} kg`;
+}
+
+function classeEcart(valeur: number | null | undefined): string {
+  if (valeur === null || valeur === undefined || valeur === 0) {
+    return '';
+  }
+  return valeur < 0 ? 'ecart-negatif' : 'ecart-positif';
+}
+
 export function construireDocumentBebc(transfert: Transfert): string {
   const lignes = transfert.lignes
     .map(
@@ -54,7 +77,58 @@ export function construireDocumentBebc(transfert: Transfert): string {
     .join('');
 
   const reception = transfert.reception
-    ? `
+    ? (() => {
+        const lignesReception = (transfert.reception.lignes ?? [])
+          .map(
+            (ligne) => `
+            <tr>
+              <td>
+                <strong>${echapper(ligne.speculationNom)}</strong>
+                <span class="sous-texte">${echapper(ligne.speculationCode)}</span>
+              </td>
+              <td class="droite">${echapper(ligne.nombreSacsAttendus)}</td>
+              <td class="droite">${echapper(ligne.nombreSacsRecus)}</td>
+              <td class="droite ${classeEcart(ligne.ecartSacs)}">${formaterEcartEntier(ligne.ecartSacs)}</td>
+              <td class="droite">${formaterKg(ligne.quantiteAttendueKg)}</td>
+              <td class="droite">${formaterKg(ligne.quantiteRecueKg)}</td>
+              <td class="droite ${classeEcart(ligne.ecartPoidsKg)}">${formaterEcartKg(ligne.ecartPoidsKg)}</td>
+            </tr>`
+          )
+          .join('');
+        const totalSacsAttendus = transfert.reception.lignes.reduce(
+          (total, ligne) => total + (Number(ligne.nombreSacsAttendus) || 0),
+          0
+        );
+        const detailReception = lignesReception
+          ? `
+          <h3>Détail de la réception par spéculation</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Spéculation</th>
+                <th class="droite" style="width: 70px">Sacs attendus</th>
+                <th class="droite" style="width: 65px">Sacs reçus</th>
+                <th class="droite" style="width: 70px">Écart sacs</th>
+                <th class="droite" style="width: 90px">Poids attendu</th>
+                <th class="droite" style="width: 90px">Poids reçu</th>
+                <th class="droite" style="width: 85px">Écart poids</th>
+              </tr>
+            </thead>
+            <tbody>${lignesReception}</tbody>
+            <tfoot>
+              <tr>
+                <td><strong>Total</strong></td>
+                <td class="droite"><strong>${echapper(totalSacsAttendus)}</strong></td>
+                <td class="droite"><strong>${echapper(transfert.reception.nombreSacsRecus)}</strong></td>
+                <td class="droite ${classeEcart(transfert.reception.ecartSacs)}"><strong>${formaterEcartEntier(transfert.reception.ecartSacs)}</strong></td>
+                <td class="droite"><strong>${formaterKg(transfert.tonnageEnleveKg)}</strong></td>
+                <td class="droite"><strong>${formaterKg(transfert.reception.tonnageDechargeKg)}</strong></td>
+                <td class="droite ${classeEcart(transfert.reception.ecartPoidsKg)}"><strong>${formaterEcartKg(transfert.reception.ecartPoidsKg)}</strong></td>
+              </tr>
+            </tfoot>
+          </table>`
+          : `<p class="note-legacy">Le détail par spéculation n'a pas été enregistré pour cette réception antérieure.</p>`;
+        return `
       <div class="bloc">
         <h2>Réception en magasin central</h2>
         <div class="grille">
@@ -64,10 +138,13 @@ export function construireDocumentBebc(transfert: Transfert): string {
           <div class="champ"><span>Date de déchargement</span><strong>${formaterDate(transfert.reception.dateDechargement)}</strong></div>
           <div class="champ"><span>Sacs reçus</span><strong>${echapper(transfert.reception.nombreSacsRecus)}</strong></div>
           <div class="champ"><span>Tonnage déchargé</span><strong>${formaterKg(transfert.reception.tonnageDechargeKg)}</strong></div>
-          <div class="champ"><span>Écart constaté</span><strong>${formaterKg(transfert.reception.ecartPoidsKg)}</strong></div>
+          <div class="champ"><span>Écart sacs</span><strong class="${classeEcart(transfert.reception.ecartSacs)}">${formaterEcartEntier(transfert.reception.ecartSacs)}</strong></div>
+          <div class="champ"><span>Écart de poids</span><strong class="${classeEcart(transfert.reception.ecartPoidsKg)}">${formaterEcartKg(transfert.reception.ecartPoidsKg)}</strong></div>
           <div class="champ"><span>Statut de conformité</span><strong>${echapper(transfert.reception.statutConformite)}</strong></div>
         </div>
-      </div>`
+        ${detailReception}
+      </div>`;
+      })()
     : '';
 
   return `<!doctype html>
@@ -204,6 +281,15 @@ export function construireDocumentBebc(transfert: Transfert): string {
       color: #0b4d2c;
       text-transform: uppercase;
     }
+    .bloc h3 {
+      margin: 12px 0 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #0b4d2c;
+      text-transform: uppercase;
+    }
     table {
       width: 100%;
       margin-top: 6px;
@@ -225,8 +311,22 @@ export function construireDocumentBebc(transfert: Transfert): string {
       color: #334155;
       font-size: 10px;
     }
+    tfoot td {
+      background: #f8fafc;
+      font-weight: 700;
+    }
     .centre { text-align: center; }
     .droite { text-align: right; font-variant-numeric: tabular-nums; }
+    .ecart-negatif { color: #b91c1c; }
+    .ecart-positif { color: #047857; }
+    .note-legacy {
+      margin: 8px 0 0;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #fffbeb;
+      color: #92400e;
+      font-size: 9px;
+    }
     .sous-texte {
       display: block;
       margin-top: 1px;

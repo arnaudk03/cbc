@@ -8,8 +8,13 @@
     <div class="page-intro-text">
       <h1>Tableau de bord</h1>
       <p>
-        Bonjour{{ auth.user()?.prenom ? ', ' + auth.user()?.prenom : '' }} — voici l'état de la
-        campagne en un coup d'œil.
+        Bonjour{{ auth.user()?.prenom ? ', ' + auth.user()?.prenom : '' }} —
+        @if (estProfilTerrain()) {
+        voici l'état de votre comptoir{{ auth.user()?.comptoirNom ? ' (' + auth.user()?.comptoirNom +
+        ')' : '' }} en un coup d'œil.
+        } @else {
+        voici l'état de la campagne en un coup d'œil.
+        }
       </p>
     </div>
     <div class="page-intro-actions">
@@ -50,7 +55,9 @@
 
     <div class="hero-progress">
       <div class="progress-labels">
-        <span>Progression de la campagne</span>
+        <span>
+          {{ estProfilTerrain() ? 'Contribution à l’objectif national' : 'Progression de la campagne' }}
+        </span>
         <strong>{{ campagne.tauxRealisation }}%</strong>
       </div>
       <div class="progress-track">
@@ -58,7 +65,10 @@
       </div>
       <div class="progress-values">
         <span><strong>{{ campagne.collecteTonnes | number:'1.0-2' }}</strong> t collectées</span>
-        <span>Objectif <strong>{{ campagne.objectifTonnes | number:'1.0-0' }}</strong> t</span>
+        <span>
+          {{ estProfilTerrain() ? 'Objectif national' : 'Objectif' }}
+          <strong>{{ campagne.objectifTonnes | number:'1.0-0' }}</strong> t
+        </span>
       </div>
     </div>
   </section>
@@ -151,6 +161,7 @@
     </div>
 
     <div class="side-stack">
+      @if (aDesActions()) {
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">
@@ -162,6 +173,7 @@
           </div>
         </div>
 
+        @if (peutVoirCollectes()) {
         <a class="todo-item" routerLink="/collectes">
           <span class="todo-icon icon-collecte"><mat-icon>fact_check</mat-icon></span>
           <span class="todo-text">
@@ -173,7 +185,9 @@
           </span>
           <mat-icon class="todo-arrow">chevron_right</mat-icon>
         </a>
+        }
 
+        @if (peutVoirPaiements()) {
         <a class="todo-item" routerLink="/paiements">
           <span class="todo-icon icon-paiement"><mat-icon>phonelink_lock</mat-icon></span>
           <span class="todo-text">
@@ -185,18 +199,18 @@
           </span>
           <mat-icon class="todo-arrow">chevron_right</mat-icon>
         </a>
+        }
 
-        @if (
-        (donnees()?.kpis?.collectesEnAttente ?? 0) === 0 &&
-        (donnees()?.kpis?.paiementsEnAttente ?? 0) === 0
-        ) {
+        @if (actionsEnAttente() === 0) {
         <div class="todo-clear">
           <mat-icon>verified</mat-icon>
           <span>Aucune action en attente. Tout est à jour.</span>
         </div>
         }
       </div>
+      }
 
+      @if (peutVoirReseau()) {
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">
@@ -232,6 +246,7 @@
         </div>
         }
       </div>
+      }
     </div>
   </section>
   }

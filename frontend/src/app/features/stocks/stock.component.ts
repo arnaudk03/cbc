@@ -561,20 +561,27 @@ export class StockComponent implements OnInit {
       this.notifier('Sélectionnez le magasin de réception.');
       return;
     }
+    if (this.receptionLignes().length === 0) {
+      this.notifier('Aucune ligne de réception à enregistrer.');
+      return;
+    }
     this.receptionEnCours.set(true);
     this.stockService
       .receptionner(transfert.id, {
         magasinCentralId: magasinId,
-        nombreSacsRecus: this.receptionSacsTotaux(),
-        tonnageDechargeKg: this.receptionTonnageTotal()
+        lignes: this.receptionLignes().map((ligne) => ({
+          speculationId: ligne.speculationId,
+          nombreSacsRecus: Number(ligne.nombreSacsRecus) || 0
+        }))
       })
       .subscribe({
         next: (resultat) => {
           this.receptionEnCours.set(false);
           this.fermerFormulaireReception();
           const ecart = resultat.reception?.ecartPoidsKg ?? 0;
+          const ecartSacs = resultat.reception?.ecartSacs ?? 0;
           this.notifier(
-            `Réception enregistrée (${resultat.reception?.statutConformite}). Écart : ${ecart} kg.`
+            `Réception enregistrée (${resultat.reception?.statutConformite}). Écart : ${ecartSacs} sac(s), ${ecart} kg.`
           );
           this.charger();
           this.chargerDonneesComptoir();
@@ -584,6 +591,15 @@ export class StockComponent implements OnInit {
           this.notifier(this.messageErreur(erreur));
         }
       });
+  }
+
+  modifierSacsRecus(index: number, valeur: number | string | null): void {
+    const recus = Math.max(0, Math.trunc(Number(valeur) || 0));
+    this.receptionLignes.update((lignes) =>
+      lignes.map((ligne, position) =>
+        position === index ? { ...ligne, nombreSacsRecus: recus } : ligne
+      )
+    );
   }
 
   annulerReception(): void {
@@ -647,6 +663,14 @@ export class StockComponent implements OnInit {
       return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(kg)} kg`;
     }
     return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(kg / 1000)} t`;
+  }
+
+  formaterEcartSacs(valeur: number | null | undefined): string {
+    if (valeur === null || valeur === undefined) {
+      return '—';
+    }
+    const signe = valeur > 0 ? '+' : '';
+    return `${signe}${new Intl.NumberFormat('fr-FR').format(valeur)} sac(s)`;
   }
 
   formaterMontant(valeur: number | null | undefined): string {

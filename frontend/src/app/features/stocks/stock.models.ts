@@ -48,6 +48,19 @@ export interface FsjRequest {
 
 export type StatutBebc = 'EN_TRANSIT' | 'LIVRE' | 'ECART_CONSTATE';
 
+export interface ReceptionLigne {
+  speculationId: number;
+  speculationCode: string;
+  speculationNom: string;
+  nombreSacsAttendus: number;
+  nombreSacsRecus: number;
+  colisageKg: number;
+  quantiteAttendueKg: number;
+  quantiteRecueKg: number;
+  ecartSacs: number;
+  ecartPoidsKg: number;
+}
+
 export interface Reception {
   id: number;
   numeroReception: string;
@@ -57,8 +70,10 @@ export interface Reception {
   dateDechargement: string;
   nombreSacsRecus: number;
   tonnageDechargeKg: number;
+  ecartSacs: number;
   ecartPoidsKg: number;
   statutConformite: string;
+  lignes: ReceptionLigne[];
 }
 
 export interface TransfertLigne {
@@ -115,10 +130,14 @@ export interface TransfertRequest {
   dateArriveePrevue?: string | null;
 }
 
+export interface ReceptionLigneRequest {
+  speculationId: number;
+  nombreSacsRecus: number;
+}
+
 export interface ReceptionRequest {
   magasinCentralId: number;
-  nombreSacsRecus: number;
-  tonnageDechargeKg: number;
+  lignes: ReceptionLigneRequest[];
 }
 
 export const STATUT_BEBC_LABELS: Record<StatutBebc, string> = {

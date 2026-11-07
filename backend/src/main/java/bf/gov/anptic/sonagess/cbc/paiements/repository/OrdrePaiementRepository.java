@@ -36,8 +36,25 @@ public interface OrdrePaiementRepository extends JpaRepository<OrdrePaiement, Lo
             select coalesce(sum(o.montantPayeCfa), 0)
             from OrdrePaiement o
             where o.statut = :statut
+              and (:comptoirId is null or exists (
+                  select 1 from CollecteBordChamp c
+                  where c.bordereauReception = o.bordereauReception
+                    and c.comptoir.id = :comptoirId))
             """)
-    Double sumMontantByStatut(@Param("statut") OrdrePaiementStatut statut);
+    Double sumMontantByStatutEtComptoir(@Param("statut") OrdrePaiementStatut statut,
+                                        @Param("comptoirId") Long comptoirId);
+
+    @Query("""
+            select count(o)
+            from OrdrePaiement o
+            where o.statut = :statut
+              and (:comptoirId is null or exists (
+                  select 1 from CollecteBordChamp c
+                  where c.bordereauReception = o.bordereauReception
+                    and c.comptoir.id = :comptoirId))
+            """)
+    long countByStatutEtComptoir(@Param("statut") OrdrePaiementStatut statut,
+                                 @Param("comptoirId") Long comptoirId);
 
     @EntityGraph(attributePaths = {
             "bordereauReception", "bordereauReception.collectes",

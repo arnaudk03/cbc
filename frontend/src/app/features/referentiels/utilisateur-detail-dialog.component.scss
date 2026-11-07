@@ -1,0 +1,40 @@
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
+}
+
+.detail-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #e6f3fb;
+  color: #0284c7;
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.detail-identite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+
+  strong {
+    color: #0f172a;
+    font-size: 1.05rem;
+  }
+}
+
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}

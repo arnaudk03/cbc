@@ -60,6 +60,10 @@ public class BordereauReceptionMagasin {
     @Column(name = "tonnage_decharge_kg", nullable = false)
     private Double tonnageDechargeKg;
 
+    @Column(name = "ecart_sacs")
+    @Builder.Default
+    private Integer ecartSacs = 0;
+
     @Column(name = "ecart_poids_kg")
     @Builder.Default
     private Double ecartPoidsKg = 0.0;
